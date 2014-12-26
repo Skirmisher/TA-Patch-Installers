@@ -1,0 +1,10 @@
+We don't want to support warez installations so we are going to use registry paths that are made by Cavedog setup or GOG installer
+
+HKLM "SOFTWARE\Microsoft\DirectPlay\Applications\Total Annihilation" "Path"
+HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Total Annihilation" "Dir"
+(don't forget Wow32Node on x64)
+
+
+Shared patch settings :
+HKCU "Software\TA Patch" "CommonGameDataPath"
+HKCU "Software\TA Patch" "CommonMapsPath"

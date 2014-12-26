@@ -1,0 +1,15 @@
+Launcher and Replayer should go to created subdirs in OTA directory
+i.e.
+C:\CAVEDOG\TOTALA\Replayer
+C:\CAVEDOG\TOTALA\Launcher
+
+totala2.hpi, ccmaps.ufo/ccx, and maps chosed by user via the DLL dialog
+DOCUMENTS\My Games\Total Annihilation\Maps
+
+ccdata.ccx, TA_Features_2013.ccx, totala1.hpi
+ROOT OF OTA\CommonData
+
+Once installed:
+Execute modstool.exe -add "-i:0" "-n:Backward Compatibility" "-p:C:\CAVEDOG\TOTALA\TotalA.exe"
+Execute modstool.exe -add "-i:1" "-n:Total Annihilation" "-v:3.9.3" "-p:C:\CAVEDOG\TOTALA\TotalA.exe" "-r:TA Patch"
+where -p has to be set to correct OTA location

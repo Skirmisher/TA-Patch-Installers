@@ -1,0 +1,11 @@
+Execute modstool.exe -add "-i:999" "-n:Total Annihilation: My Mod" "-v:Alpha 1.0" "-p:C:\MyMod\TotalA.exe" "-r:TAMyMod"
+add, remove, update
+i = mod ID number (anything except 0 and 1, we need to standardize it)
+n = mod name
+v = mod version
+p = full path to mod TotalA.exe file
+r = short registry name (TA Esc, TA Zero)
+s = sets lock on SFX limit
+u = sets lock on unit limit (Wotan wants it for Esc)
+
+Copy modinfo.cfg to game directory

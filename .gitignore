@@ -1,0 +1,6 @@
+/**/bin/*
+/**/data/*
+/**/script/*.exe
+!/Patch/data/modstool.exe
+!/Patch/data/remove_junk.cmd
+!/Patch/data/restore_junk.cmd
