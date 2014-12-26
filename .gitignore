@@ -1,6 +1,8 @@
 /**/bin/*
 /**/data/*
 /**/script/*.exe
+!/**/bin/.gitignore
+!/**/data/.gitignore
 !/Patch/data/modstool.exe
 !/Patch/data/remove_junk.cmd
 !/Patch/data/restore_junk.cmd
