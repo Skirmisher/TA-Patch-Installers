@@ -5,6 +5,7 @@
 LangString name ${LANG_ENGLISH} "TA Unofficial Patch Resources ${VERSION}"
 LangString caption ${LANG_ENGLISH} "TA Unofficial Patch Resources ${VERSION} Installer"
 LangString abortwarning ${LANG_ENGLISH} "Are you sure you want to abort installation? Your TA installation could be damaged!"
+LangString patchcheck_fail ${LANG_ENGLISH} "Total Annihilation Unofficial Patch not found. Please launch this installer through the patch installer. (If you believe this is an error, click Cancel for help.)$\n$\nWould you like to download the patch installer now?"
 LangString welcome_title ${LANG_ENGLISH} "Welcome to the TA Unofficial Patch Resources Installer"
 LangString welcome_text ${LANG_ENGLISH} "This will install the resources required for the unofficial Total Annihilation patch on your computer.$\n$\nPress Next to begin installation setup."
 LangString directory_header ${LANG_ENGLISH} "Select TA Directory"

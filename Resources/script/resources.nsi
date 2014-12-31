@@ -7,7 +7,6 @@
   !include MUI2.nsh
   !include Sections.nsh
   !include FileFunc.nsh
-  !include x64.nsh
 
 ; Version
   !define VERSION 2.0
@@ -30,6 +29,8 @@
 ; Variables
   Var need   ; for telling user which files are required from CD
   Var cdskip ; finish message informs of skipped CD copy
+  Var commonMaps ; common maps directory
+  Var commonData ; common data directory
     
 Name "$(name)"
 OutFile "..\bin\TA_Patch_Resources_${VERSION}.exe"
@@ -51,6 +52,7 @@ SetCompressor /SOLID lzma
     ; Welcome page
       !define MUI_WELCOMEPAGE_TITLE "$(welcome_title)"
       !define MUI_WELCOMEPAGE_TEXT "$(welcome_text)"
+      !define MUI_PAGE_CUSTOMFUNCTION_PRE PatchLaunched
       !insertmacro MUI_PAGE_WELCOME
     ; Directory page
       !define MUI_PAGE_HEADER_TEXT "$(directory_header)"
@@ -78,6 +80,11 @@ SetCompressor /SOLID lzma
 ; Reserve files (for solid compression)
   ReserveFile md5dll.dll
 
+; Install dirs
+  InstallDir "C:\CAVEDOG\TOTALA"
+  InstallDirRegKey HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Total Annihilation" "Dir"
+  InstallDirRegKey HKLM "SOFTWARE\Microsoft\DirectPlay\Applications\Total Annihilation" "Path"
+  
 ; Install sections
 
 Section /o "CD1" section_cd1
@@ -150,34 +157,51 @@ Section "Default"
   #File /a TA_Map_Weapons_2013.zip
   File /a TA_Map_Weapons_2013_readme.txt
   !cd ..\script
-  ${If} ${RunningX64}
-    WriteRegStr HKLM "SOFTWARE\Wow6432Node\TAUniverse\TA Patch Resources" "Path" "$INSTDIR"
-    WriteRegStr HKLM "SOFTWARE\Wow6432Node\TAUniverse\TA Patch Resources" "Version" "2.0"
-  ${Else}
-    WriteRegStr HKLM "SOFTWARE\TAUniverse\TA Patch Resources" "Path" "$INSTDIR"
-    WriteRegStr HKLM "SOFTWARE\TAUniverse\TA Patch Resources" "Version" "2.0"
-  ${EndIf}
+  WriteRegStr HKLM "SOFTWARE\TAUniverse\TA Patch Resources" "Path" "$INSTDIR"
+  WriteRegStr HKLM "SOFTWARE\TAUniverse\TA Patch Resources" "Version" "2.0"
 SectionEnd
 
 ; Functions
 
 Function ".onInit"
-  ${If} ${RunningX64}
-    ReadRegStr $INSTDIR HKLM "SOFTWARE\Wow6432Node\Microsoft\DirectPlay\Applications\Total Annihilation" "Path"
-    ${If} ${Errors}
-      ClearErrors
-      ReadRegStr $INSTDIR HKLM "SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Total Annihilation" "Dir"
-    ${EndIf}
-  ${Else}
-    ReadRegStr $INSTDIR HKLM "SOFTWARE\Microsoft\DirectPlay\Applications\Total Annihilation" "Path"
-    ${If} ${Errors}
-      ClearErrors
-      ReadRegStr $INSTDIR HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Total Annihilation" "Dir"
-    ${EndIf}
+  SetRegView 32
+  ${GetParameters} $R6
+  ${GetOptions} '$R6' "frisbee" $5
+  ${IfNot} ${Errors}
+    StrCpy $R5 "frisbee"
+    ${GetOptions} '$R6' "/MAPS=" $commonMaps
+    ${GetOptions} '$R6' "/DATA=" $commonData
+    Return
   ${EndIf}
+  ReadRegStr $5 HKLM "SOFTWARE\TAUniverse\TA Patch" "Version"
   ${If} ${Errors}
     ClearErrors
-    StrCpy $INSTDIR "C:\CAVEDOG\TOTALA"
+    MessageBox MB_YESNOCANCEL "$(patchcheck_fail)" IDYES dl IDNO abort
+      #open a text file probably, because webpages are unreliable right
+    dl:
+    #dl stuff
+    abort:
+    Abort
+  ${EndIf}
+;  ReadRegStr $INSTDIR HKLM "SOFTWARE\Microsoft\DirectPlay\Applications\Total Annihilation" "Path"
+;  ${If} ${Errors}
+;    ClearErrors
+;    ReadRegStr $INSTDIR HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Total Annihilation" "Dir"
+;  ${EndIf}
+;  ${If} ${Errors}
+;    ClearErrors
+;    StrCpy $INSTDIR "C:\CAVEDOG\TOTALA"
+;  ${EndIf}
+FunctionEnd
+
+Function "PatchLaunched"
+  ${If} $R7 == 1
+    Call CheckDirectory
+    Abort
+  ${EndIf}
+  ${If} $R5 == "frisbee"
+    StrCpy $R7 1
+    Abort
   ${EndIf}
 FunctionEnd
 

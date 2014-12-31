@@ -5,7 +5,6 @@
   !include MUI2.nsh
   !include Sections.nsh
   !include FileFunc.nsh
-  !include x64.nsh
 
 ; Version
   !define VERSION 3.9.3
@@ -95,6 +94,7 @@ SectionEnd
 ; Functions
 
 Function ".onInit"
+  SetRegView 32
   StrCpy $commonDataChanged false
   ${If} ${RunningX64}
     ReadRegStr $9 HKLM "SOFTWARE\Wow6432Node\TAUniverse\TA Patch Resources" "Version"
