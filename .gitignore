@@ -3,6 +3,7 @@
 /**/script/*.exe
 !/**/bin/.gitignore
 !/**/data/.gitignore
+!/Mods/data/modinfo.cfg
 !/Patch/data/modstool.exe
 !/Patch/data/remove_junk.cmd
 !/Patch/data/restore_junk.cmd

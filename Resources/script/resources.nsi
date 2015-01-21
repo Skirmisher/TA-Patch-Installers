@@ -27,8 +27,8 @@
   !define 1ZRB_MD5 "C36F21A5403F5ADC68EA426A157AC407"
 
 ; Variables
-  Var need   ; for telling user which files are required from CD
-  Var cdskip ; finish message informs of skipped CD copy
+  Var need       ; for telling user which files are required from CD
+  Var cdskip     ; finish message informs of skipped CD copy
   Var commonMaps ; common maps directory
   Var commonData ; common data directory
     
@@ -59,19 +59,21 @@ SetCompressor /SOLID lzma
       !define MUI_PAGE_HEADER_SUBTEXT "$(directory_header_sub)"
       !define MUI_DIRECTORYPAGE_TEXT_TOP " "
       !define MUI_DIRECTORYPAGE_TEXT_DESTINATION "$(directory_select)"
+      !define MUI_PAGE_CUSTOMFUNCTION_PRE PatchLaunched
       !define MUI_PAGE_CUSTOMFUNCTION_LEAVE CheckDirectory
       !insertmacro MUI_PAGE_DIRECTORY
     ; Instfiles page
       !insertmacro MUI_PAGE_INSTFILES
+      !define MUI_PAGE_CUSTOMFUNCTION_LEAVE PatchLaunched
     ; Finish page
       !define MUI_FINISHPAGE_TITLE "$(finish_title)"
-      !define MUI_FINISHPAGE_TEXT "$(finish_text)$cdskip"
+      !define MUI_FINISHPAGE_TEXT "$(finish_text)"
       !define MUI_FINISHPAGE_SHOWREADME "$INSTDIR\$(finish_readme).txt"
       !define MUI_FINISHPAGE_SHOWREADME_TEXT "$(finish_showreadme)"
       !define MUI_FINISHPAGE_LINK "$(finish_link)"
       !define MUI_FINISHPAGE_LINK_LOCATION http://tauniverse.com/
       !define MUI_FINISHPAGE_NOREBOOTSUPPORT
-      !define MUI_FINISHPAGE_NOAUTOCLOSE ; delete later
+      !define MUI_FINISHPAGE_NOAUTOCLOSE #DEBUG
       !insertmacro MUI_PAGE_FINISH
 
   ; Language
@@ -80,10 +82,8 @@ SetCompressor /SOLID lzma
 ; Reserve files (for solid compression)
   ReserveFile md5dll.dll
 
-; Install dirs
-  InstallDir "C:\CAVEDOG\TOTALA"
-  InstallDirRegKey HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Total Annihilation" "Dir"
-  InstallDirRegKey HKLM "SOFTWARE\Microsoft\DirectPlay\Applications\Total Annihilation" "Path"
+InstallDir "C:\CAVEDOG\TOTALA"
+InstallDirRegKey HKLM "SOFTWARE\TAUniverse\TA Patch Resources" "Path"
   
 ; Install sections
 
@@ -150,7 +150,10 @@ SectionEnd
 Section "Default"
   SetOutPath -
   !cd ..\data
-  #File /a /r tamus
+  #ExecShell "mkdir" "$INSTDIR\tamus" SW_HIDE
+  SetOutPath "$INSTDIR\tamus"
+  #File /a /r "tamus\*"
+  SetOutPath -
   #File /a cdmaps.ccx
   #File /a TA_AIs_2013.ccx
   #File /a TA_Features_2013.ccx
@@ -158,44 +161,63 @@ Section "Default"
   File /a TA_Map_Weapons_2013_readme.txt
   !cd ..\script
   WriteRegStr HKLM "SOFTWARE\TAUniverse\TA Patch Resources" "Path" "$INSTDIR"
-  WriteRegStr HKLM "SOFTWARE\TAUniverse\TA Patch Resources" "Version" "2.0"
+  WriteRegStr HKLM "SOFTWARE\TAUniverse\TA Patch Resources" "Version" "${VERSION}"
+  MessageBox MB_OK|MB_ICONEXCLAMATION "$cdskip"
 SectionEnd
 
 ; Functions
 
 Function ".onInit"
-  SetRegView 32
+  SetRegView 32 ; this probably isn't necessary
   ${GetParameters} $R6
   ${GetOptions} '$R6' "frisbee" $5
   ${IfNot} ${Errors}
     StrCpy $R5 "frisbee"
     ${GetOptions} '$R6' "/MAPS=" $commonMaps
     ${GetOptions} '$R6' "/DATA=" $commonData
+    ${If} ${Errors}
+      MessageBox MB_OK|MB_ICONSTOP "One or more required parameters not found. Don't look at me, you know what you did. Go consult the source."
+      ; explode
+      Abort
+    ${EndIf}
     Return
   ${EndIf}
   ReadRegStr $5 HKLM "SOFTWARE\TAUniverse\TA Patch" "Version"
   ${If} ${Errors}
+    ${OrIf} $5 < "2.0"
     ClearErrors
     MessageBox MB_YESNOCANCEL "$(patchcheck_fail)" IDYES dl IDNO abort
-      #open a text file probably, because webpages are unreliable right
+      # open a local HTML file probably, perhaps with a link to an online resource
     dl:
-    #dl stuff
+    # dl stuff
     abort:
     Abort
   ${EndIf}
-;  ReadRegStr $INSTDIR HKLM "SOFTWARE\Microsoft\DirectPlay\Applications\Total Annihilation" "Path"
-;  ${If} ${Errors}
-;    ClearErrors
-;    ReadRegStr $INSTDIR HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Total Annihilation" "Dir"
-;  ${EndIf}
-;  ${If} ${Errors}
-;    ClearErrors
-;    StrCpy $INSTDIR "C:\CAVEDOG\TOTALA"
-;  ${EndIf}
+  ReadRegStr $INSTDIR HKLM "SOFTWARE\TAUniverse\TA Patch Resources" "Path"
+  ${If} ${Errors}
+    ClearErrors
+    ReadRegStr $INSTDIR HKLM "SOFTWARE\TAUniverse\TA Patch" "Path"
+  ${EndIf}
+  ${If} ${Errors}
+    ClearErrors
+    ReadRegStr $INSTDIR HKLM "SOFTWARE\Microsoft\DirectPlay\Applications\Total Annihilation" "Path"
+  ${EndIf}
+  ${If} ${Errors}
+    ClearErrors
+    ReadRegStr $INSTDIR HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Total Annihilation" "Dir"
+  ${EndIf}
+  ${If} ${Errors}
+    ClearErrors
+    StrCpy $INSTDIR "C:\CAVEDOG\TOTALA"
+  ${EndIf}
 FunctionEnd
 
 Function "PatchLaunched"
+  ${If} $R7 == 2
+    Quit
+  ${EndIf}
   ${If} $R7 == 1
+    StrCpy $R7 2
     Call CheckDirectory
     Abort
   ${EndIf}
@@ -244,7 +266,11 @@ Function "CheckDirectory"
     !insertmacro UnselectSection ${section_cd1}
     !insertmacro UnselectSection ${section_cd2}
     !insertmacro UnselectSection ${section_movies}
-    Abort
+    ${If} $R5 == "frisbee"
+      Quit
+    ${Else}
+      Abort
+    ${EndIf}
     proceed:
   ${EndIf}
 FunctionEnd
@@ -258,7 +284,7 @@ Function "GetDrivesCD1"
     ${If} $2 == ${TOTALA2_MD5}
       DetailPrint "$(copying_disc1)"
       Sleep 500 ; because NSIS is goofy and forgets to print the above on time otherwise
-      CopyFiles /SILENT "$9totala2.hpi" "$INSTDIR\totala2.hpi" ; using absolute paths because the docs tell us to
+      CopyFiles /SILENT "$9totala2.hpi" "$commonData\totala2.hpi" ; using absolute paths because the docs tell us to
       StrCpy $R0 "StopGetDrives"
     ${Else}
       DetailPrint "$(md5fail_disc1)"
@@ -276,7 +302,7 @@ Function "GetDrivesCD2"
     ${If} $4 == ${TOTALA4_MD5}
       DetailPrint "$(copying_disc2)"
       Sleep 500
-      CopyFiles /SILENT "$9totala4.hpi" "$INSTDIR\totala4.hpi"
+      CopyFiles /SILENT "$9totala4.hpi" "$commonData\totala4.hpi"
       StrCpy $R0 "StopGetDrives"
     ${Else}
       DetailPrint "$(md5fail_disc2)"
@@ -295,7 +321,7 @@ Function "GetDrivesMovies"
       DetailPrint "$(copying_movies)"
       Sleep 500
       CreateDirectory "$INSTDIR\Data"
-      CopyFiles /SILENT "$9Data\*.zrb" "$INSTDIR\Data"
+      CopyFiles /SILENT "$9Data\*.zrb" "$commonData\Data"
       StrCpy $R0 "StopGetDrives"
     ${Else}
       DetailPrint "$(md5fail_movies)"

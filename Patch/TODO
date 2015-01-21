@@ -1,10 +1,12 @@
 PATCH INSTALLER TODO
--write install routines: copy files (launcher, recorder, replayer), start DLL for moving maps, maybe do another check for OTA CD maps, 
+-write install routines: copy files (launcher, recorder, replayer), start DLL for moving maps, 
 -write uninstaller to undo the things
 -figure out what else the old patch installer does [logs are in repo root]
   -it shoves irrelevant junk files into folders--need to investigate [just reverse the "restore_junk.cmd" thing]
--uninstall old patch first, but maybe retain settings and try to do it silently (I'll look at Windows Installer docs)
--ooh, mod migration from old system?
+-uninstall old patch/resources first, but maybe retain settings and try to do it silently (I'll look at Windows Installer docs)
+-mod migration from old system
+-shortcuts for launcher and replayer, file registration for .tad
+-set up system to patch patch/resources
 
 COMPLETED (newest first)
 -the goddamn directories page...took a lot of reinventing the wheel, but finally got it nice and neat

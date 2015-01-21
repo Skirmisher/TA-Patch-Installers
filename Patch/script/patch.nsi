@@ -2,12 +2,19 @@
 ; by Skirmisher
 
 ; Includes
+  !addplugindir .
+  
   !include MUI2.nsh
   !include Sections.nsh
   !include FileFunc.nsh
+  !include WordFunc.nsh
+  !addincludedir ./Dialogs
+  !include defines.nsh ; for Dialogs
 
 ; Version
   !define VERSION 3.9.3
+  !define KNOWN_RES_VER 2.0 ; current patch version as of compile time, suggests to update if user has older version
+  !define LAST_COMPAT_VER 2.0 ; will require resources update if resources are older than this
   VIProductVersion "3.9.3.0"
   VIAddVersionKey "FileVersion" "3.9.3.0"
   VIAddVersionKey "ProductName" "Total Annihilation Unofficial Patch"
@@ -66,20 +73,49 @@ SetCompressor /SOLID lzma
       !define MUI_FINISHPAGE_LINK "$(finish_link)"
       !define MUI_FINISHPAGE_LINK_LOCATION http://tauniverse.com/
       !define MUI_FINISHPAGE_NOREBOOTSUPPORT
-      !define MUI_FINISHPAGE_NOAUTOCLOSE ; delete later
+      !define MUI_FINISHPAGE_NOAUTOCLOSE #DEBUG
       !insertmacro MUI_PAGE_FINISH
 
   ; Language
     !insertmacro MUI_LANGUAGE "English"
 
+; Reserve files (for solid compression)
+#  ReserveFile NSISdl.dll
+  ReserveFile Dialogs.dll
+
+InstallDir "C:\CAVEDOG\TOTALA"
+InstallDirRegKey HKLM "SOFTWARE\TAUniverse\TA Patch" "Path"
+
 ; Install sections
+
+Section "Create Directories"
+  ExecShell "mkdir" "$commonMaps" SW_HIDE
+  ExecShell "mkdir" "$commonData" SW_HIDE
+SectionEnd
+
+Section /o "Resources" resources
+  DetailPrint "Installing TA Patch Resources..."
+  ExecWait '"$R4" frisbee /MAPS="$commonMaps" /DATA="$commonData" /D=$INSTDIR'
+  ReadRegStr $6 HKLM "SOFTWARE\TAUniverse\TA Patch Resources" "Version"
+  ${If} ${Errors}
+    MessageBox MB_OK|MB_ICONSTOP "TA Patch Resources install not detected! Either the installer failed/was canceled, or you selected the wrong EXE. Please restart this installer to continue."
+    RMDir "$commonMaps"
+    RMDir "$commonData"
+    Quit
+  ${EndIf}
+SectionEnd
 
 Section "Default"
   ; feel free to comment out files to test
   SetOutPath -
   !cd ..\data
-  File /r Launcher
-  File /r Replayer
+  ExecShell "mkdir" "$INSTDIR\Launcher" SW_HIDE
+  ExecShell "mkdir" "$INSTDIR\Replayer" SW_HIDE
+  SetOutPath "$INSTDIR\Launcher"
+  File /r "Launcher\*"
+  SetOutPath "$INSTDIR\Replayer"
+  File /r "Replayer\*"
+  SetOutPath -
   File modstool.exe
   File remove_junk.cmd
   File restore_junk.cmd
@@ -88,39 +124,63 @@ Section "Default"
   ExecWait 'modstool.exe -add "-i:1" "-n:Total Annihilation" "-v:3.9.3" "-p:$INSTDIR\TotalA.exe" "-r:TA Patch"'
 SectionEnd
 
-; Reserve files (for solid compression)
-  ReserveFile NSISdl.dll
-
 ; Functions
 
 Function ".onInit"
-  SetRegView 32
+  SetRegView 32 ; this probably isn't necessary but
   StrCpy $commonDataChanged false
-  ${If} ${RunningX64}
-    ReadRegStr $9 HKLM "SOFTWARE\Wow6432Node\TAUniverse\TA Patch Resources" "Version"
-    ${If} ${Errors}
-      ClearErrors
-      MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(rescheck_fail)" IDNO abort
-      ExecShell "open" "http://tauniverse.com/"
-      abort:
+  ReadRegStr $9 HKLM "SOFTWARE\TAUniverse\TA Patch" "Version"
+  SetErrors #DEBUG
+  ${If} ${Errors}
+    ${OrIf} $9 == "1.0"
+    ClearErrors
+    #MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(rescheck_fail)" IDNO abort
+    #ExecShell "open" "http://tauniverse.com/"
+    #abort:
+    #Abort
+    MessageBox MB_YESNOCANCEL|MB_ICONINFORMATION "$(resinst)" IDYES open IDNO dl
+    Abort
+    dl:
+    # dl stuff
+    Goto done
+    open:
+    Dialogs::Open "TA Patch Resources Installer|TA_Patch_Resources_*.exe|" 1 "$(selres)" $EXEDIR ${VAR_R4}
+    ${If} $R4 == "0"
       Abort
-    ${ElseIf} $9 < "2.0"
-      MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(rescheck_old)" IDNO skip
-      ExecShell "open" "http://tauniverse.com/"
-      Abort
-      skip:
+    ${Else}
+      !insertmacro SelectSection ${resources}
     ${EndIf}
-    ReadRegStr $INSTDIR HKLM "SOFTWARE\Wow6432Node\Microsoft\DirectPlay\Applications\Total Annihilation" "Path"
-    ${If} ${Errors}
-      ClearErrors
-      ReadRegStr $INSTDIR HKLM "SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Total Annihilation" "Dir"
-    ${EndIf}
+    done:
   ${Else}
-    ReadRegStr $INSTDIR HKLM "SOFTWARE\Microsoft\DirectPlay\Applications\Total Annihilation" "Path"
-    ${If} ${Errors}
-      ClearErrors
-      ReadRegStr $INSTDIR HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Total Annihilation" "Dir"
+    ${VersionConvert} $9 "" $7 ; future-proof if someone decides to tack letters on (this function converts letters to number system)
+    ${VersionCompare} $7 "${KNOWN_RES_VER}" $7
+    ${If} $7 == 2 ; if version is older than KNOWN_PATCH_VER
+      ${VersionCompare} $6 "${LAST_COMPAT_VER}" $7
+      ${If} $7 == 2 ; if version is older than LAST_COMPAT_VER
+        MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(rescheck_incompat)" IDNO abort
+        # dl stuff
+        abort:
+        Abort
+      ${Else}
+        MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(rescheck_old)" IDNO skip
+        ExecShell "open" "http://tauniverse.com/"
+        Abort
+        skip:
+      ${EndIf}
     ${EndIf}
+  ${EndIf}
+  ReadRegStr $INSTDIR HKLM "SOFTWARE\TAUniverse\TA Patch" "Path"
+  ${If} ${Errors}
+    ClearErrors
+    ReadRegStr $INSTDIR HKLM "SOFTWARE\TAUniverse\TA Patch Resources" "Path"
+  ${EndIf}
+  ${If} ${Errors}
+    ClearErrors
+    ReadRegStr $INSTDIR HKLM "SOFTWARE\Microsoft\DirectPlay\Applications\Total Annihilation" "Path"
+  ${EndIf}
+  ${If} ${Errors}
+    ClearErrors
+    ReadRegStr $INSTDIR HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Total Annihilation" "Dir"
   ${EndIf}
   ${If} ${Errors}
     ClearErrors
