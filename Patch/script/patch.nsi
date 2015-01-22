@@ -120,6 +120,8 @@ Section "Default"
   File remove_junk.cmd
   File restore_junk.cmd
   !cd ..\script
+  WriteRegStr HKLM "SOFTWARE\TAUniverse\TA Patch" "CommonGameDataPath" $commonData
+  WriteRegStr HKLM "SOFTWARE\TAUniverse\TA Patch" "CommonMapsPath" $commonMaps
   ExecWait 'modstool.exe -add "-i:0" "-n:Backwards Compatibility" "-p:$INSTDIR\TotalA.exe"'
   ExecWait 'modstool.exe -add "-i:1" "-n:Total Annihilation" "-v:3.9.3" "-p:$INSTDIR\TotalA.exe" "-r:TA Patch"'
 SectionEnd
@@ -163,7 +165,7 @@ Function ".onInit"
         Abort
       ${Else}
         MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(rescheck_old)" IDNO skip
-        ExecShell "open" "http://tauniverse.com/"
+        # dl stuff
         Abort
         skip:
       ${EndIf}

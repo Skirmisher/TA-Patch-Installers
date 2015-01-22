@@ -2,5 +2,6 @@ MODS INSTALLER TODO
 -normal installation
 -normal uninstallation
 -k no standalone installation lol
+-place defines in separate header file, for modders to keep
 -detect old patch, suggest to update
 -set up system to patch patch/resources

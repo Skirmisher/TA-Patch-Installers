@@ -5,5 +5,5 @@ HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Total Annihilation" "D
 
 
 Shared patch settings :
-HKCU "Software\TA Patch" "CommonGameDataPath"
-HKCU "Software\TA Patch" "CommonMapsPath"
+HKLM "Software\TAUniverse\TA Patch" "CommonGameDataPath"
+HKLM "Software\TAUniverse\TA Patch" "CommonMapsPath"

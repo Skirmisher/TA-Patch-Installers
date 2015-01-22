@@ -2,7 +2,8 @@
 ; by Skirmisher
 
 ; Mod: Development Mod 1.4 by Rime
-#(edit to suit your mod--edit version/details section for easy setup, or modify any parts to your liking; also see script/Languages/*.nsh files)#
+#(edit to suit your mod--edit modinfo.nsh for easy setup, or modify parts of the script to your liking; also see script/Languages/*.nsh files)#
+#(note that you will have to manually merge changes to installer script in the event of an update if you modify this file)#
 
 ; Includes
   !addplugindir .
@@ -11,16 +12,10 @@
   !include Sections.nsh
   !include FileFunc.nsh
   !include WordFunc.nsh
+  !addincludedir .
+  !include modinfo.nsh ; edit this file!
 
-; Version/details
-  !define VERSION 1.4
-  !define FULL_VERSION 1.4.0.0
-  !define MOD_NAME "TA Development Mod"
-  !define REG_NAME "TA Dev Mod" ; do not use slashes of any kind!!
-  !define FILE_NAME "TA_Dev_Mod_${VERSION}" ; do not specify .exe extension
-  !define WEBSITE "http://plobex.pl/devmod/"
-  !define KNOWN_PATCH_VER 3.9.3 ; current patch as of compile time, suggests to update if user has older version
-  !define LAST_COMPAT_VER 3.9.3 ; will not install if patch is older than this
+; Version/details [defines moved to modinfo.nsh]
   VIProductVersion "${FULL_VERSION}"
   VIAddVersionKey "FileVersion" "${FULL_VERSION}"
   VIAddVersionKey "ProductName" "${MOD_NAME}"
@@ -94,7 +89,7 @@ SectionEnd
 
 Function ".onInit"
   SetRegView 32
-  ReadRegStr $5 "SOFTWARE\TAUniverse\TA Patch" "Version"
+  ReadRegStr $5 HKLM "SOFTWARE\TAUniverse\TA Patch" "Version"
   ${If} ${Errors}
     ${OrIf} $5 == "3.9.01"
     ${OrIf} $5 == "3.9.02"
