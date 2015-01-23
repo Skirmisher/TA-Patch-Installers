@@ -10,6 +10,7 @@ LangString windowcrash ${LANG_ENGLISH} "Failed to initialize window!"
 LangString rescheck_old ${LANG_ENGLISH} "TA Patch Resources found, but are out of date. You may continue, but you may be missing some critical or updated TA resources.$\n$\nWould you like to download the newest version now?"
 LangString rescheck_incompat ${LANG_ENGLISH} "This version of the TA Unofficial Patch requires a TA Patch Resources update before it can be installed. Would you like to download and install the latest patch resources now?"
 LangString resinst ${LANG_ENGLISH} "The TA Patch Resources (newer than 1.0) are required as part of this installation. Click Yes to select the installer from your computer, or click No to download the resources installer."
+LangString res_install_fail ${LANG_ENGLISH} "TA Patch Resources install not detected! Either the installer failed/was canceled, or you selected the wrong EXE. Please restart this installer to continue."
 LangString selres ${LANG_ENGLISH} "Select the TA Patch Resources Installer"
 LangString welcome_title ${LANG_ENGLISH} "Welcome to the TA Unofficial Patch Installer"
 LangString welcome_text ${LANG_ENGLISH} "This will install the unofficial Total Annihilation patch on your computer.$\n$\nPress Next to begin installation setup."
@@ -27,4 +28,4 @@ LangString directory_invalid ${LANG_ENGLISH} "TotalA.exe was not detected in the
 
 ; Language-specific version keys
 VIAddVersionKey /LANG=${LANG_ENGLISH} "FileDescription" "Installer for the TA Unofficial Patch"
-VIAddVersionKey /LANG=${LANG_ENGLISH} "LegalCopyright" "Copyright © 2013-2014 Total Annihilation Universe & contributors"
+VIAddVersionKey /LANG=${LANG_ENGLISH} "LegalCopyright" "Copyright © 2015 Total Annihilation Universe & contributors"

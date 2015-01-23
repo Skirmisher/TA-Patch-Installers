@@ -44,4 +44,4 @@ LangString finish_link ${LANG_ENGLISH} "Total Annihilation Universe"
 
 ; Language-specific version keys
 VIAddVersionKey /LANG=${LANG_ENGLISH} "FileDescription" "Installer for the TA Unofficial Patch Resources"
-VIAddVersionKey /LANG=${LANG_ENGLISH} "LegalCopyright" "Copyright © 2013-2015 Total Annihilation Universe & contributors"
+VIAddVersionKey /LANG=${LANG_ENGLISH} "LegalCopyright" "Copyright © 2015 Total Annihilation Universe & contributors"

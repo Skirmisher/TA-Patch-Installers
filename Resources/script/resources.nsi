@@ -162,7 +162,9 @@ Section "Default"
   !cd ..\script
   WriteRegStr HKLM "SOFTWARE\TAUniverse\TA Patch Resources" "Path" "$INSTDIR"
   WriteRegStr HKLM "SOFTWARE\TAUniverse\TA Patch Resources" "Version" "${VERSION}"
-  MessageBox MB_OK|MB_ICONEXCLAMATION "$cdskip"
+  ${If} $cdskip != ""
+    MessageBox MB_OK|MB_ICONEXCLAMATION "$cdskip"
+  ${EndIf}
 SectionEnd
 
 ; Functions

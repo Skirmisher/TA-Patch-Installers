@@ -2,7 +2,7 @@
 ; by Skirmisher
 
 ; Includes
-  !addplugindir .
+  !addplugindir ./Dialogs
   
   !include MUI2.nsh
   !include Sections.nsh
@@ -98,7 +98,7 @@ Section /o "Resources" resources
   ExecWait '"$R4" frisbee /MAPS="$commonMaps" /DATA="$commonData" /D=$INSTDIR'
   ReadRegStr $6 HKLM "SOFTWARE\TAUniverse\TA Patch Resources" "Version"
   ${If} ${Errors}
-    MessageBox MB_OK|MB_ICONSTOP "TA Patch Resources install not detected! Either the installer failed/was canceled, or you selected the wrong EXE. Please restart this installer to continue."
+    MessageBox MB_OK|MB_ICONSTOP "$(res_install_fail)"
     RMDir "$commonMaps"
     RMDir "$commonData"
     Quit
@@ -154,6 +154,8 @@ Function ".onInit"
     ${EndIf}
     done:
   ${Else}
+    ReadRegStr $commonMaps HKLM "SOFTWARE\TAUniverse\TA Patch" "CommonMapsPath"
+    ReadRegStr $commonData HKLM "SOFTWARE\TAUniverse\TA Patch" "CommonGameDataPath"
     ${VersionConvert} $9 "" $7 ; future-proof if someone decides to tack letters on (this function converts letters to number system)
     ${VersionCompare} $7 "${KNOWN_RES_VER}" $7
     ${If} $7 == 2 ; if version is older than KNOWN_PATCH_VER
@@ -188,8 +190,10 @@ Function ".onInit"
     ClearErrors
     StrCpy $INSTDIR "C:\CAVEDOG\TOTALA"
   ${EndIf}
-  StrCpy $commonMaps "$DOCUMENTS\My Games\Total Annihilation\Maps"
-  StrCpy $commonData "$INSTDIR\CommonData"
+  ${If} $commonMaps == ""
+    StrCpy $commonMaps "$DOCUMENTS\My Games\Total Annihilation\Maps"
+    StrCpy $commonData "$INSTDIR\CommonData"
+  ${EndIf}
 FunctionEnd
 
 Function "Directories"
