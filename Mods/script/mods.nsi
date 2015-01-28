@@ -17,9 +17,9 @@
 
 ; Version/details [defines moved to modinfo.nsh]
   VIProductVersion "${FULL_VERSION}"
-  VIAddVersionKey "FileVersion" "${FULL_VERSION}"
+  VIAddVersionKey "FileVersion" "${VERSION}"
   VIAddVersionKey "ProductName" "${MOD_NAME}"
-  VIAddVersionKey "ProductVersion" "${FULL_VERSION}"
+  VIAddVersionKey "ProductVersion" "${VERSION}"
   VIAddVersionKey "OriginalFilename" "${FILE_NAME}.exe"
 
 ; Language files
@@ -33,6 +33,7 @@
 Name "${MOD_NAME} ${VERSION}"
 OutFile "..\bin\${FILE_NAME}.exe"
 Caption "$(caption)"
+BrandingText "Total Annihilation Universe"
 
 RequestExecutionLevel admin
 
@@ -61,7 +62,7 @@ SetCompressor /SOLID lzma
       !define MUI_FINISHPAGE_SHOWREADME "$INSTDIR\$(finish_readme).txt"
       !define MUI_FINISHPAGE_SHOWREADME_TEXT "$(finish_showreadme)"
       !define MUI_FINISHPAGE_LINK "$(finish_link)"
-      !define MUI_FINISHPAGE_LINK_LOCATION http://tauniverse.com/
+      !define MUI_FINISHPAGE_LINK_LOCATION ${WEBSITE}
       !define MUI_FINISHPAGE_NOREBOOTSUPPORT
       !define MUI_FINISHPAGE_NOAUTOCLOSE #DEBUG
       !insertmacro MUI_PAGE_FINISH
@@ -79,6 +80,7 @@ InstallDirRegKey HKLM "SOFTWARE\TAUniverse\TA Patch" "Path"
 
 Section "Default"
   StrCpy $INSTDIR "$INSTDIR\${REG_NAME}"
+  SetOutPath -
   !cd ..\data
   File /r ".\*"
   File "modinfo.cfg" ; required I guess

@@ -20,7 +20,7 @@ type
     { Public declarations }
   end;
 
-  function ShowMoveMapsDialog(TAPath, MapsPath: PChar) :integer; stdcall; external 'move_maps.dll' name 'ShowMoveMapsDialog';
+  function ShowMoveMapsDialog(TAPath, MapsPath: PChar) :integer; cdecl; external 'move_maps.dll' name 'ShowMoveMapsDialog';
 
 var
   Form1: TForm1;

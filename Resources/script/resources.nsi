@@ -10,7 +10,8 @@
 
 ; Version
   !define VERSION 2.0
-  #!define VERSION_UNDER
+  !define KNOWN_PATCH_VER 4.0.0 ; current patch as of compile time, suggests to update if user has older version
+  !define LAST_COMPAT_VER 4.0.0 ; will not install if patch is older than this
   VIProductVersion "2.0.0.0"
   VIAddVersionKey "FileVersion" "2.0"
   VIAddVersionKey "ProductName" "Total Annihilation Unofficial Patch Resources"
@@ -35,6 +36,7 @@
 Name "$(name)"
 OutFile "..\bin\TA_Patch_Resources_${VERSION}.exe"
 Caption "$(caption)"
+BrandingText "Total Annihilation Universe"
 
 RequestExecutionLevel admin
 
@@ -184,16 +186,33 @@ Function ".onInit"
     ${EndIf}
     Return
   ${EndIf}
+  ClearErrors
   ReadRegStr $5 HKLM "SOFTWARE\TAUniverse\TA Patch" "Version"
   ${If} ${Errors}
-    ${OrIf} $5 < "2.0"
+    ${OrIf} $5 == "3.9.01"
+    ${OrIf} $5 == "3.9.02"
     ClearErrors
-    MessageBox MB_YESNOCANCEL "$(patchcheck_fail)" IDYES dl IDNO abort
-      # open a local HTML file probably, perhaps with a link to an online resource
-    dl:
+    MessageBox MB_YESNO "$(patchcheck_fail)" IDNO abort
     # dl stuff
     abort:
     Abort
+  ${Else}
+    ${VersionConvert} $5 "" $7 ; future-proof if someone decides to tack letters on (this function converts letters to number system)
+    ${VersionCompare} $7 "${KNOWN_PATCH_VER}" $6
+    ${If} $6 == 2 ; if version is older than KNOWN_PATCH_VER
+      ${VersionCompare} $7 "${LAST_COMPAT_VER}" $6
+      ${If} $6 == 2 ; if version is older than LAST_COMPAT_VER
+        MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(patchcheck_incompat)" IDNO abort
+        # dl stuff
+        abort:
+        Abort
+      ${Else}
+        MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(patchcheck_old)" IDNO skip
+        # dl stuff
+        Abort
+        skip:
+      ${EndIf}
+    ${EndIf}
   ${EndIf}
   ReadRegStr $INSTDIR HKLM "SOFTWARE\TAUniverse\TA Patch Resources" "Path"
   ${If} ${Errors}

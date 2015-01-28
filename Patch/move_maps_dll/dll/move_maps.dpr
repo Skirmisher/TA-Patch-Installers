@@ -8,7 +8,7 @@ uses
 
 {$R *.res}
 
-function ShowMoveMapsDialog(TAPath, CommonMapsPath: PChar): Integer; stdcall;
+function ShowMoveMapsDialog(TAPath, CommonMapsPath: PChar): Integer; cdecl;
 begin
   MoveMapsForm := TMoveMapsForm.Create(nil);
   MoveMapsForm.sTAPath := IncludeTrailingPathDelimiter(String(TAPath));

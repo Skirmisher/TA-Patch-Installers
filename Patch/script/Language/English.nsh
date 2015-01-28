@@ -9,7 +9,7 @@ LangString windowcrash ${LANG_ENGLISH} "Failed to initialize window!"
 #LangString rescheck_fail ${LANG_ENGLISH} "Total Annihilation Patch Resources not found.$\n$\nWould you like to download it now?"
 LangString rescheck_old ${LANG_ENGLISH} "TA Patch Resources found, but are out of date. You may continue, but you may be missing some critical or updated TA resources.$\n$\nWould you like to download the newest version now?"
 LangString rescheck_incompat ${LANG_ENGLISH} "This version of the TA Unofficial Patch requires a TA Patch Resources update before it can be installed. Would you like to download and install the latest patch resources now?"
-LangString resinst ${LANG_ENGLISH} "The TA Patch Resources (newer than 1.0) are required as part of this installation. Click Yes to select the installer from your computer, or click No to download the resources installer."
+LangString rescheck_fail ${LANG_ENGLISH} "The TA Patch Resources (newer than 1.0) are required as part of this installation. Click Yes to select the installer from your computer, or click No to download the resources installer."
 LangString res_install_fail ${LANG_ENGLISH} "TA Patch Resources install not detected! Either the installer failed/was canceled, or you selected the wrong EXE. Please restart this installer to continue."
 LangString selres ${LANG_ENGLISH} "Select the TA Patch Resources Installer"
 LangString welcome_title ${LANG_ENGLISH} "Welcome to the TA Unofficial Patch Installer"
@@ -25,6 +25,7 @@ LangString directories_browse_TA ${LANG_ENGLISH} "Select TA installation directo
 LangString directories_browse_maps ${LANG_ENGLISH} "Select folder to place common maps in:"
 LangString directories_browse_data ${LANG_ENGLISH} "Select folder to place common game data in:"
 LangString directory_invalid ${LANG_ENGLISH} "TotalA.exe was not detected in the TA directory you selected. Verify that you have selected your TA directory."
+LangString move_maps_cancel ${LANG_ENGLISH} "You canceled the map-move dialog. Unless you move them manually, your downloaded maps will remain accessible by original TA only. Continue?"
 
 ; Language-specific version keys
 VIAddVersionKey /LANG=${LANG_ENGLISH} "FileDescription" "Installer for the TA Unofficial Patch"

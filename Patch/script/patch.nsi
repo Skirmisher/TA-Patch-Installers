@@ -12,13 +12,13 @@
   !include defines.nsh ; for Dialogs
 
 ; Version
-  !define VERSION 3.9.3
-  !define KNOWN_RES_VER 2.0 ; current patch version as of compile time, suggests to update if user has older version
+  !define VERSION 4.0.0
+  !define KNOWN_RES_VER 2.0 ; current resources version as of compile time, suggests to update if user has older version
   !define LAST_COMPAT_VER 2.0 ; will require resources update if resources are older than this
-  VIProductVersion "3.9.3.0"
-  VIAddVersionKey "FileVersion" "3.9.3.0"
+  VIProductVersion "4.0.0.0"
+  VIAddVersionKey "FileVersion" "4.0.0.0"
   VIAddVersionKey "ProductName" "Total Annihilation Unofficial Patch"
-  VIAddVersionKey "ProductVersion" "3.9.3.0"
+  VIAddVersionKey "ProductVersion" "4.0.0.0"
   VIAddVersionKey "OriginalFilename" "TA_Patch_${VERSION}.exe"
 
 ; Language files
@@ -43,6 +43,7 @@
 Name "$(name)"
 OutFile "..\bin\TA_Patch_${VERSION}.exe"
 Caption "$(caption)"
+BrandingText "Total Annihilation Universe"
 
 RequestExecutionLevel admin
 
@@ -56,7 +57,7 @@ SetCompressor /SOLID lzma
       !define MUI_ABORTWARNING_TEXT "$(abortwarning)"
       !define MUI_ABORTWARNING_CANCEL_DEFAULT
       
-  ; Pages
+  ; Installer pages
     ; Welcome page
       !define MUI_WELCOMEPAGE_TITLE "$(welcome_title)"
       !define MUI_WELCOMEPAGE_TEXT "$(welcome_text)"
@@ -75,20 +76,25 @@ SetCompressor /SOLID lzma
       !define MUI_FINISHPAGE_NOREBOOTSUPPORT
       !define MUI_FINISHPAGE_NOAUTOCLOSE #DEBUG
       !insertmacro MUI_PAGE_FINISH
+  ; Uninstaller pages
+    ; Confirm page
+      #!define MUI_UNPAGE_CONFIRM
 
   ; Language
     !insertmacro MUI_LANGUAGE "English"
 
 ; Reserve files (for solid compression)
 #  ReserveFile NSISdl.dll
-  ReserveFile Dialogs.dll
+  ReserveFile ".\Dialogs\Dialogs.dll"
+  ReserveFile "${NSISDIR}\Plugins\System.dll"
+  ReserveFile "..\move_maps_dll\move_maps.dll"
 
 InstallDir "C:\CAVEDOG\TOTALA"
 InstallDirRegKey HKLM "SOFTWARE\TAUniverse\TA Patch" "Path"
 
 ; Install sections
 
-Section "Create Directories"
+Section /o "Create Directories" mkdir
   ExecShell "mkdir" "$commonMaps" SW_HIDE
   ExecShell "mkdir" "$commonData" SW_HIDE
 SectionEnd
@@ -103,6 +109,14 @@ Section /o "Resources" resources
     RMDir "$commonData"
     Quit
   ${EndIf}
+  InitPluginsDir
+  SetOutPath $PLUGINSDIR
+  File "..\move_maps_dll\move_maps.dll"
+  StrCpy $3 $INSTDIR
+  StrCpy $4 $commonMaps
+  maps_dialog:
+  System::Call 'move_maps::ShowMoveMapsDialog(t, t) i(r3, r4) .r5'
+  ${IfThen} $5 == 2 ${|} MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(move_maps_cancel)" IDNO maps_dialog ${|}
 SectionEnd
 
 Section "Default"
@@ -120,18 +134,20 @@ Section "Default"
   File remove_junk.cmd
   File restore_junk.cmd
   !cd ..\script
+  WriteRegStr HKLM "SOFTWARE\TAUniverse\TA Patch" "Path" "$INSTDIR"
+  WriteRegStr HKLM "SOFTWARE\TAUniverse\TA Patch" "Version" "${VERSION}"
   WriteRegStr HKLM "SOFTWARE\TAUniverse\TA Patch" "CommonGameDataPath" $commonData
   WriteRegStr HKLM "SOFTWARE\TAUniverse\TA Patch" "CommonMapsPath" $commonMaps
   ExecWait 'modstool.exe -add "-i:0" "-n:Backwards Compatibility" "-p:$INSTDIR\TotalA.exe"'
-  ExecWait 'modstool.exe -add "-i:1" "-n:Total Annihilation" "-v:3.9.3" "-p:$INSTDIR\TotalA.exe" "-r:TA Patch"'
+  ExecWait 'modstool.exe -add "-i:1" "-n:Total Annihilation" "-v:4.0.0" "-p:$INSTDIR\TotalA.exe" "-r:TA Patch"'
 SectionEnd
 
-; Functions
+; Installer functions
 
 Function ".onInit"
   SetRegView 32 ; this probably isn't necessary but
   StrCpy $commonDataChanged false
-  ReadRegStr $9 HKLM "SOFTWARE\TAUniverse\TA Patch" "Version"
+  ReadRegStr $9 HKLM "SOFTWARE\TAUniverse\TA Patch Resources" "Version"
   SetErrors #DEBUG
   ${If} ${Errors}
     ${OrIf} $9 == "1.0"
@@ -140,7 +156,7 @@ Function ".onInit"
     #ExecShell "open" "http://tauniverse.com/"
     #abort:
     #Abort
-    MessageBox MB_YESNOCANCEL|MB_ICONINFORMATION "$(resinst)" IDYES open IDNO dl
+    MessageBox MB_YESNOCANCEL|MB_ICONINFORMATION "$(rescheck_fail)" IDYES open IDNO dl
     Abort
     dl:
     # dl stuff
@@ -157,10 +173,10 @@ Function ".onInit"
     ReadRegStr $commonMaps HKLM "SOFTWARE\TAUniverse\TA Patch" "CommonMapsPath"
     ReadRegStr $commonData HKLM "SOFTWARE\TAUniverse\TA Patch" "CommonGameDataPath"
     ${VersionConvert} $9 "" $7 ; future-proof if someone decides to tack letters on (this function converts letters to number system)
-    ${VersionCompare} $7 "${KNOWN_RES_VER}" $7
-    ${If} $7 == 2 ; if version is older than KNOWN_PATCH_VER
-      ${VersionCompare} $6 "${LAST_COMPAT_VER}" $7
-      ${If} $7 == 2 ; if version is older than LAST_COMPAT_VER
+    ${VersionCompare} $7 "${KNOWN_RES_VER}" $6
+    ${If} $6 == 2 ; if version is older than KNOWN_RES_VER
+      ${VersionCompare} $7 "${LAST_COMPAT_VER}" $6
+      ${If} $6 == 2 ; if version is older than LAST_COMPAT_VER
         MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(rescheck_incompat)" IDNO abort
         # dl stuff
         abort:
@@ -285,3 +301,6 @@ Function "Directories_leave"
     Abort
   ${EndIf}
 FunctionEnd
+
+; Uninstaller functions
+
