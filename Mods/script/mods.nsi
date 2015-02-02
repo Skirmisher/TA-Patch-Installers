@@ -78,7 +78,7 @@ InstallDirRegKey HKLM "SOFTWARE\TAUniverse\TA Patch" "Path"
 
 ; Install sections
 
-Section "Default"
+Section
   StrCpy $INSTDIR "$INSTDIR\${REG_NAME}"
   SetOutPath -
   !cd ..\data

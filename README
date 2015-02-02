@@ -1,3 +1,5 @@
 Welcome to the TA Unofficial Patch installer project! This README file will eventually contain sufficient documentation for you to get a grasp on the workings of the installers and get started with them. I'll fill in documentation as I get the time.
 
 You can view the roadmap for each individual installer by reading the TODO files in each directory.
+
+Third-party plugins used: nsProcess ( http://nsis.sourceforge.net/NsProcess_plugin ), MD5 plugin ( http://nsis.sourceforge.net/MD5_plugin ), Inetc ( http://nsis.sourceforge.net/Inetc_plug-in )

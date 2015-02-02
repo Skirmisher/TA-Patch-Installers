@@ -1,10 +1,10 @@
 RESOURCES INSTALLER TODO
--write uninstall routines
+-write uninstall routines (never mind, cover that in patch installer instead)
 -analyze behavior of old resources installer to replicate [logs are in repo root]
--finish warning text is cut off, use dialog box instead? (or completely rewrite the finish page lol)
 -check for music already existing in GOG copy
 -set up system to patch patch/resources
 
 COMPLETED (newest first)
+-finish warning text is cut off, use dialog box instead? (or completely rewrite the finish page lol)
 -oh we might want to copy movies too won't we
   -oops I need to rewrite a lot of dialogs now

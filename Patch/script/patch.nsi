@@ -2,14 +2,11 @@
 ; by Skirmisher
 
 ; Includes
-  !addplugindir ./Dialogs
-  
+  !addplugindir . 
   !include MUI2.nsh
   !include Sections.nsh
   !include FileFunc.nsh
   !include WordFunc.nsh
-  !addincludedir ./Dialogs
-  !include defines.nsh ; for Dialogs
 
 ; Version
   !define VERSION 4.0.0
@@ -27,9 +24,11 @@
 
 ; Variables
   
-  Var commonMaps ; common maps directory
-  Var commonData ; common data directory
+  Var commonMaps        ; common maps directory
+  Var commonData        ; common data directory
   Var commonDataChanged ; flag if common data directory has been changed by user
+  Var mapsDirCreated    ; flag if common maps directory did not exist at install time
+  Var dataDirCreated    ; flag if common data directory did not exist at install time
 
   ; HWNDs
     Var Directories_window
@@ -84,29 +83,28 @@ SetCompressor /SOLID lzma
     !insertmacro MUI_LANGUAGE "English"
 
 ; Reserve files (for solid compression)
-#  ReserveFile NSISdl.dll
-  ReserveFile ".\Dialogs\Dialogs.dll"
-  ReserveFile "${NSISDIR}\Plugins\System.dll"
+  ReserveFile "nsProcess.dll"
+  ReserveFile "inetc.dll"
+  ReserveFile "${NSISDIR}\Plugins\nsDialogs.dll"
   ReserveFile "..\move_maps_dll\move_maps.dll"
+  ReserveFile "${NSISDIR}\Plugins\System.dll"
 
 InstallDir "C:\CAVEDOG\TOTALA"
 InstallDirRegKey HKLM "SOFTWARE\TAUniverse\TA Patch" "Path"
 
 ; Install sections
 
-Section /o "Create Directories" mkdir
-  ExecShell "mkdir" "$commonMaps" SW_HIDE
-  ExecShell "mkdir" "$commonData" SW_HIDE
-SectionEnd
-
-Section /o "Resources" resources
+Section /o "Resources" section_resources
   DetailPrint "Installing TA Patch Resources..."
   ExecWait '"$R4" frisbee /MAPS="$commonMaps" /DATA="$commonData" /D=$INSTDIR'
+  ClearErrors
   ReadRegStr $6 HKLM "SOFTWARE\TAUniverse\TA Patch Resources" "Version"
   ${If} ${Errors}
     MessageBox MB_OK|MB_ICONSTOP "$(res_install_fail)"
-    RMDir "$commonMaps"
-    RMDir "$commonData"
+    ; I couldn't come up with a good way to delete all empty directories *and* keep pre-existing empty directories so
+    ; (or maybe I should just delete all empty directories anyway)
+    #RMDir "$commonMaps"
+    #RMDir "$commonData"
     Quit
   ${EndIf}
   InitPluginsDir
@@ -119,12 +117,12 @@ Section /o "Resources" resources
   ${IfThen} $5 == 2 ${|} MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(move_maps_cancel)" IDNO maps_dialog ${|}
 SectionEnd
 
-Section "Default"
+Section
   ; feel free to comment out files to test
   SetOutPath -
   !cd ..\data
-  ExecShell "mkdir" "$INSTDIR\Launcher" SW_HIDE
-  ExecShell "mkdir" "$INSTDIR\Replayer" SW_HIDE
+  CreateDirectory "$INSTDIR\Launcher"
+  CreateDirectory "$INSTDIR\Replayer"
   SetOutPath "$INSTDIR\Launcher"
   File /r "Launcher\*"
   SetOutPath "$INSTDIR\Replayer"
@@ -145,6 +143,21 @@ SectionEnd
 ; Installer functions
 
 Function ".onInit"
+  totala:
+  nsProcess::_FindProcess "TotalA.exe"
+  Pop $2
+  ${Select} $2
+    ${Case} "0"
+      MessageBox MB_RETRYCANCEL|MB_ICONSTOP "($totala_running)" IDRETRY totala
+      Abort
+    ${Case} "603"
+      Nop
+    ${Default}
+      MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION "$(findprocess_error)" IDOK continue
+      Abort
+      continue:
+  ${EndSelect}
+  nsProcess::_Unload
   SetRegView 32 ; this probably isn't necessary but
   StrCpy $commonDataChanged false
   ReadRegStr $9 HKLM "SOFTWARE\TAUniverse\TA Patch Resources" "Version"
@@ -152,23 +165,55 @@ Function ".onInit"
   ${If} ${Errors}
     ${OrIf} $9 == "1.0"
     ClearErrors
+    StrCpy $9 "full"
     #MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(rescheck_fail)" IDNO abort
     #ExecShell "open" "http://tauniverse.com/"
     #abort:
     #Abort
-    MessageBox MB_YESNOCANCEL|MB_ICONINFORMATION "$(rescheck_fail)" IDYES open IDNO dl
+    MessageBox MB_YESNOCANCEL|MB_ICONINFORMATION "$(rescheck_fail)" IDYES open IDNO dlres
     Abort
-    dl:
-    # dl stuff
+    dlres:
+    inetc::get /BANNER "Getting version manifest..." /CONNECTTIMEOUT 5 "http://totalconcat.org/TA/UP/resources.ini" "$TEMP\TAUP_resources.ini"
+    Pop $0
+    ${If} $0 != "OK"
+      MessageBox MB_OK|MB_ICONSTOP "Download error: $0"
+      Abort
+    ${EndIf}
+    ${If} $9 == "full"
+      ReadINIStr $1 "$TEMP\TAUP_resources.ini" resources full
+    ${Else}
+      ReadINIStr $1 "$TEMP\TAUP_resources.ini" resources $9
+      ${If} ${Errors}
+        ClearErrors
+        ReadINIStr $1 "$TEMP\TAUP_resources.ini" resources full
+      ${EndIf}
+    ${EndIf}
+    Delete "$TEMP\TAUP_resources.ini"
+    nsDialogs::SelectFileDialog save "$EXEDIR\TA_Patch_Resources_${KNOWN_RES_VER}.exe" "Executable file (*.exe)|*.exe"
+    Pop $R4
+    ${If} $R4 == ""
+      Abort
+    ${EndIf}
+    inetc::get /TRANSLATE "$(url)" "$(downloading)" "$(connecting)" "$(file_name)" "$(received)" "$(file_size)" "$(remaining_time)" "$(total_time)" \
+      /POPUP "" "http://totalconcat.org/TA/UP/resources/$1" "$R4"
+    Pop $0
+    ${Switch} $0
+      ${Case} "OK"
+        ${Break}
+      ${Default}
+        MessageBox MB_OK|MB_ICONSTOP "Download error: $0"
+      ${Case} "Cancelled"
+        Abort
+    ${EndSwitch}
     Goto done
     open:
-    Dialogs::Open "TA Patch Resources Installer|TA_Patch_Resources_*.exe|" 1 "$(selres)" $EXEDIR ${VAR_R4}
-    ${If} $R4 == "0"
+    nsDialogs::SelectFileDialog open "$EXEDIR\TA_Patch_Resources_${KNOWN_RES_VER}.exe" "TA Patch Resources Installer|TA_Patch_Resources_*.exe"
+    Pop $R4
+    ${If} $R4 == ""
       Abort
-    ${Else}
-      !insertmacro SelectSection ${resources}
     ${EndIf}
     done:
+    !insertmacro SelectSection ${section_resources}
   ${Else}
     ReadRegStr $commonMaps HKLM "SOFTWARE\TAUniverse\TA Patch" "CommonMapsPath"
     ReadRegStr $commonData HKLM "SOFTWARE\TAUniverse\TA Patch" "CommonGameDataPath"
@@ -177,15 +222,10 @@ Function ".onInit"
     ${If} $6 == 2 ; if version is older than KNOWN_RES_VER
       ${VersionCompare} $7 "${LAST_COMPAT_VER}" $6
       ${If} $6 == 2 ; if version is older than LAST_COMPAT_VER
-        MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(rescheck_incompat)" IDNO abort
-        # dl stuff
-        abort:
+        MessageBox MB_YESNOCANCEL|MB_ICONEXCLAMATION "$(rescheck_incompat)" IDYES open IDNO dlres ; this just runs the same code from above
         Abort
       ${Else}
-        MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(rescheck_old)" IDNO skip
-        # dl stuff
-        Abort
-        skip:
+        MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(rescheck_old)" IDYES dlres
       ${EndIf}
     ${EndIf}
   ${EndIf}
@@ -299,6 +339,14 @@ Function "Directories_leave"
   ${IfNot} ${FileExists} "TotalA.exe"
     MessageBox MB_OK|MB_ICONEXCLAMATION "$(directory_invalid)"
     Abort
+  ${EndIf}
+  ${IfNot} ${FileExists} "$commonMaps\."
+    CreateDirectory "$commonMaps"
+    StrCpy $mapsDirCreated true
+  ${EndIf}
+  ${IfNot} ${FileExists} "$commonData\."
+    CreateDirectory "$commonData"
+    StrCpy $dataDirCreated true
   ${EndIf}
 FunctionEnd
 

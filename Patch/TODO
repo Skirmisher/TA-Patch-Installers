@@ -8,9 +8,10 @@ PATCH INSTALLER TODO
 -set up system to patch patch/resources
 -upgrade mode: remove directories page, replace with confirmation page?
   -maybe eventually I'll write a registry fixer/modification tool, for people that are lazy but also want to change their TA directory
--change resources incompatibility version check to accept resources installer file like the fresh-install functionality, because the resources installer has the same check and we don't want a paradox :P
 -Windows uninstall registration
+-improve directory creation/removal (for common dirs): multiple subdirs at once, remove all empty parents if install interrupted
 
 COMPLETED (newest first)
+-change resources incompatibility version check to accept resources installer file like the fresh-install functionality, because the resources installer has the same check and we don't want a paradox :P
+-write basic install routines: copy files (launcher, recorder, replayer), start DLL for moving maps,
 -the goddamn directories page...took a lot of reinventing the wheel, but finally got it nice and neat
--write basic install routines: copy files (launcher, recorder, replayer), start DLL for moving maps, 

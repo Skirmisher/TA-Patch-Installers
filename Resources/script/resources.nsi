@@ -7,6 +7,7 @@
   !include MUI2.nsh
   !include Sections.nsh
   !include FileFunc.nsh
+  !include WordFunc.nsh
 
 ; Version
   !define VERSION 2.0
@@ -65,8 +66,8 @@ SetCompressor /SOLID lzma
       !define MUI_PAGE_CUSTOMFUNCTION_LEAVE CheckDirectory
       !insertmacro MUI_PAGE_DIRECTORY
     ; Instfiles page
-      !insertmacro MUI_PAGE_INSTFILES
       !define MUI_PAGE_CUSTOMFUNCTION_LEAVE PatchLaunched
+      !insertmacro MUI_PAGE_INSTFILES
     ; Finish page
       !define MUI_FINISHPAGE_TITLE "$(finish_title)"
       !define MUI_FINISHPAGE_TEXT "$(finish_text)"
@@ -82,6 +83,7 @@ SetCompressor /SOLID lzma
     !insertmacro MUI_LANGUAGE "English"
 
 ; Reserve files (for solid compression)
+  ReserveFile inetc.dll
   ReserveFile md5dll.dll
 
 InstallDir "C:\CAVEDOG\TOTALA"
@@ -89,16 +91,14 @@ InstallDirRegKey HKLM "SOFTWARE\TAUniverse\TA Patch Resources" "Path"
   
 ; Install sections
 
+SectionGroup "CD copy operations"
+
 Section /o "CD1" section_cd1
   MessageBox MB_OK|MB_ICONINFORMATION "$(insert_disc1)"
   redetect:
   ${GetDrives} "CDROM" "GetDrivesCD1"
   ${IfThen} $R0 == "StopGetDrives" ${|} Goto end ${|}
-  .notfound1:
-  MessageBox MB_ABORTRETRYIGNORE|MB_ICONEXCLAMATION|MB_DEFBUTTON2 "$(notfound_disc1)" IDRETRY redetect IDIGNORE skip
-  StrCpy $R9 1
-  Call AbortWarning
-  skip:
+  MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "$(notfound_disc1)" IDRETRY redetect
   DetailPrint "$(cdskip_disc1)"
   StrCpy $cdskip "$(cdskip_finish) [$(cdskip_totala2)]"
   StrCpy $R3 1
@@ -110,11 +110,7 @@ Section /o "CD2" section_cd2
   redetect:
   ${GetDrives} "CDROM" "GetDrivesCD2"
   ${IfThen} $R0 == "StopGetDrives" ${|} Goto end ${|}
-  .notfound2:
-  MessageBox MB_ABORTRETRYIGNORE|MB_ICONEXCLAMATION|MB_DEFBUTTON2 "$(notfound_disc2)" IDRETRY redetect IDIGNORE skip
-  StrCpy $R9 2
-  Call AbortWarning
-  skip:
+  MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "$(notfound_disc2)" IDRETRY redetect
   DetailPrint "$(cdskip_disc2)"
   ${IfNot} $cdskip == ""
     StrCpy $cdskip "$(cdskip_finish) [$(cdskip_totala2), $(cdskip_totala4)]"
@@ -131,11 +127,7 @@ Section /o "Movies" section_movies
   redetect:
   ${GetDrives} "CDROM" "GetDrivesMovies"
   ${IfThen} $R0 == "StopGetDrives" ${|} Goto end ${|}
-  .notfound3:
-  MessageBox MB_ABORTRETRYIGNORE|MB_ICONEXCLAMATION|MB_DEFBUTTON2 "$(notfound_movies)" IDRETRY redetect IDIGNORE skip
-  StrCpy $R9 3
-  Call AbortWarning
-  skip:
+  MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "$(notfound_movies)" IDRETRY redetect
   DetailPrint "$(cdskip_movies)"
   ${If} $cdskip == ""
     StrCpy $cdskip "$(cdskip_finish) [$(cdskip_movies)]"
@@ -149,19 +141,38 @@ Section /o "Movies" section_movies
   end:
 SectionEnd
 
-Section "Default"
+SectionGroupEnd
+
+Section "Music" section_music
+  ExecShell "mkdir" "$INSTDIR\tamus" SW_HIDE
+  SetOutPath "$INSTDIR\tamus"
+  !cd ..\data
+  File /a /r "tamus\*"
+  !cd ..\script
+  SetOutPath -
+SectionEnd
+
+Section
   SetOutPath -
   !cd ..\data
-  #ExecShell "mkdir" "$INSTDIR\tamus" SW_HIDE
-  SetOutPath "$INSTDIR\tamus"
-  #File /a /r "tamus\*"
-  SetOutPath -
+  #SetOutPath "$INSTDIR\tamus"
+  #File /a /r "tamus\1.mp3"
+  #SetOutPath -
   #File /a cdmaps.ccx
   #File /a TA_AIs_2013.ccx
   #File /a TA_Features_2013.ccx
   #File /a TA_Map_Weapons_2013.zip
   File /a TA_Map_Weapons_2013_readme.txt
   !cd ..\script
+  ${IfNot} ${SectionIsSelected} ${section_cd1}
+    Rename "$INSTDIR\totala2.hpi" "$commonData\totala2.hpi"
+  ${EndIf}
+  ${IfNot} ${SectionIsSelected} ${section_cd2}
+    Rename "$INSTDIR\totala4.hpi" "$commonData\totala4.hpi"
+  ${EndIf}
+  ${IfNot} ${SectionIsSelected} ${section_movies}
+    Rename "$INSTDIR\Data" "$commonData\Data"
+  ${EndIf}
   WriteRegStr HKLM "SOFTWARE\TAUniverse\TA Patch Resources" "Path" "$INSTDIR"
   WriteRegStr HKLM "SOFTWARE\TAUniverse\TA Patch Resources" "Version" "${VERSION}"
   ${If} $cdskip != ""
@@ -192,7 +203,7 @@ Function ".onInit"
     ${OrIf} $5 == "3.9.01"
     ${OrIf} $5 == "3.9.02"
     ClearErrors
-    MessageBox MB_YESNO "$(patchcheck_fail)" IDNO abort
+    MessageBox MB_YESNO|MB_ICONINFORMATION "$(patchcheck_fail)" IDNO abort
     # dl stuff
     abort:
     Abort
@@ -202,9 +213,9 @@ Function ".onInit"
     ${If} $6 == 2 ; if version is older than KNOWN_PATCH_VER
       ${VersionCompare} $7 "${LAST_COMPAT_VER}" $6
       ${If} $6 == 2 ; if version is older than LAST_COMPAT_VER
-        MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(patchcheck_incompat)" IDNO abort
+        MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(patchcheck_incompat)" IDNO abort2
         # dl stuff
-        abort:
+        abort2:
         Abort
       ${Else}
         MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(patchcheck_old)" IDNO skip
@@ -294,6 +305,10 @@ Function "CheckDirectory"
     ${EndIf}
     proceed:
   ${EndIf}
+  ${If} ${FileExists} "tamus\*"
+    ${OrIf} ${FileExists} "tmusi\*"
+    !insertmacro UnselectSection ${section_music}
+  ${EndIf}
 FunctionEnd
 
 Function "GetDrivesCD1"
@@ -349,22 +364,4 @@ Function "GetDrivesMovies"
     ${EndIf}
   ${EndIf}
   Push $R0
-FunctionEnd
-
-Function "AbortWarning"
-  !ifdef MUI_ABORTWARNING_CANCEL_DEFAULT
-    MessageBox MB_YESNO|MB_ICONEXCLAMATION|MB_DEFBUTTON2 "${MUI_ABORTWARNING_TEXT}" IDYES Quit
-  !else
-    MessageBox MB_YESNO|MB_ICONEXCLAMATION "${MUI_ABORTWARNING_TEXT}" IDYES Quit
-  !endif
-  
-  ${If} $R9 == 1
-    Goto .notfound1
-  ${ElseIf} $R9 == 2
-    Goto .notfound2
-  ${ElseIf} $R9 == 3
-    Goto .notfound3
-  ${EndIf}
-  Quit:
-  Quit
 FunctionEnd
