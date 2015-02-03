@@ -22,13 +22,9 @@
   VIAddVersionKey "ProductVersion" "${VERSION}"
   VIAddVersionKey "OriginalFilename" "${FILE_NAME}.exe"
 
-; Language files
-  !addincludedir .\Language
-  !include English.nsh
-
 ; Variables
   
-  
+  Var SMFolder
 
 Name "${MOD_NAME} ${VERSION}"
 OutFile "..\bin\${FILE_NAME}.exe"
@@ -53,7 +49,18 @@ SetCompressor /SOLID lzma
       !define MUI_WELCOMEPAGE_TEXT "$(welcome_text)"
       !insertmacro MUI_PAGE_WELCOME
     ; Directories page
-      
+      !define MUI_PAGE_HEADER_TEXT "$(directory_header)"
+      !define MUI_PAGE_HEADER_SUBTEXT "$(directory_header_sub)"
+      !define MUI_DIRECTORYPAGE_TEXT_TOP "$(directory_desc)"
+      !define MUI_DIRECTORYPAGE_TEXT_DESTINATION "$(directory_box)"
+      !insertmacro MUI_PAGE_DIRECTORY
+    ; Start Menu page
+      #!define MUI_STARTMENUPAGE_TEXT_CHECKBOX "$(smfolder_disable)"
+      !define MUI_STARTMENUPAGE_DEFAULTFOLDER "${MOD_NAME}"
+      !define MUI_STARTMENUPAGE_REGISTRY_ROOT HKLM
+      !define MUI_STARTMENUPAGE_REGISTRY_KEY "SOFTWARE\TAUniverse\${REG_NAME}"
+      !define MUI_STARTMENUPAGE_REGISTRY_VALUENAME "StartMenu"
+      !insertmacro MUI_PAGE_STARTMENU startmenu $SMFolder
     ; Instfiles page
       !insertmacro MUI_PAGE_INSTFILES
     ; Finish page
@@ -67,8 +74,10 @@ SetCompressor /SOLID lzma
       !define MUI_FINISHPAGE_NOAUTOCLOSE #DEBUG
       !insertmacro MUI_PAGE_FINISH
 
-  ; Language
-    !insertmacro MUI_LANGUAGE "English"
+; Language files
+  !insertmacro MUI_LANGUAGE "English"
+  !addincludedir .\Language
+  !include English.nsh
 
 ; Reserve files (for solid compression)
 #  ReserveFile NSISdl.dll

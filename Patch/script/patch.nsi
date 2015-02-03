@@ -19,6 +19,7 @@
   VIAddVersionKey "OriginalFilename" "TA_Patch_${VERSION}.exe"
 
 ; Language files
+  !insertmacro MUI_LANGUAGE "English"
   !addincludedir .\Language
   !include English.nsh
 
@@ -79,8 +80,10 @@ SetCompressor /SOLID lzma
     ; Confirm page
       #!define MUI_UNPAGE_CONFIRM
 
-  ; Language
-    !insertmacro MUI_LANGUAGE "English"
+; Language files
+  !insertmacro MUI_LANGUAGE "English"
+  !addincludedir .\Language
+  !include English.nsh
 
 ; Reserve files (for solid compression)
   ReserveFile "nsProcess.dll"
@@ -194,8 +197,8 @@ Function ".onInit"
     ${If} $R4 == ""
       Abort
     ${EndIf}
-    inetc::get /TRANSLATE "$(url)" "$(downloading)" "$(connecting)" "$(file_name)" "$(received)" "$(file_size)" "$(remaining_time)" "$(total_time)" \
-      /POPUP "" "http://totalconcat.org/TA/UP/resources/$1" "$R4"
+    inetc::get /POPUP "" /TRANSLATE "$(url)" "$(downloading)" "$(connecting)" "$(file_name)" "$(received)" "$(file_size)" "$(remaining_time)" "$(total_time)" \
+      "http://totalconcat.org/TA/UP/resources/$1" "$R4"
     Pop $0
     ${Switch} $0
       ${Case} "OK"

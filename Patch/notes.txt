@@ -13,3 +13,24 @@ Once installed:
 Execute modstool.exe -add "-i:0" "-n:Backward Compatibility" "-p:C:\CAVEDOG\TOTALA\TotalA.exe"
 Execute modstool.exe -add "-i:1" "-n:Total Annihilation" "-v:3.9.3" "-p:C:\CAVEDOG\TOTALA\TotalA.exe" "-r:TA Patch"
 where -p has to be set to correct OTA location
+
+Patch installer cleanup checklist (from patch readme) (low priority?):
+- TA v3.1 Patch by Cavedog
+- The 6 downloadable units and 16 downloadable maps by Cavedog
+- TA Demo 0.99b2 by The Swedish Yankspankers
+- TA Demo 1.0.0.545 update by Xon (dplayx.dll)
+- TA Interface Upgrade updates by xpoy (ddraw.dll)
+- McnTerra-NS "fix" for TA Demo
+- All map feature packs (TA Features 20xx, Frenzy, AtlantisMB, Tamec2004, TAK2006, etc.)
+- TA NoCD Music Patch
+- All NoCD patches
+- Expanded Battleroom and Map Selection GUI
+- All unit limit patches (500, 1500, 5000)
+- TA Sound Fix (mixingbuffers increase)
+- TA Pathfinding Fix
+- LOS tables fix
+- +atm 10000 patcher
+- Multicore Patch
+- MP3 music redirection code no longer writes a totala_log.txt log file to your boot drive like the GOG/Impulse versions and old NoCD Music Patch and the file is deleted during installation if detected.
+Beyond what the patch does:
+- TA Mutation? bluh I don't even want to think about it...does it have any way to be uninstalled?

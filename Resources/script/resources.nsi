@@ -19,10 +19,6 @@
   VIAddVersionKey "ProductVersion" "2.0"
   VIAddVersionKey "OriginalFilename" "TA_Patch_Resources_${VERSION}.exe"
 
-; Language files
-  !addincludedir .\Language
-  !include English.nsh
-
 ; OTA file hashes
   !define TOTALA2_MD5 "D6D178081A670CE0CDAB4F8BD035148E"
   !define TOTALA4_MD5 "5C71CDC43F12FF759243C76C39261640"
@@ -61,7 +57,7 @@ SetCompressor /SOLID lzma
       !define MUI_PAGE_HEADER_TEXT "$(directory_header)"
       !define MUI_PAGE_HEADER_SUBTEXT "$(directory_header_sub)"
       !define MUI_DIRECTORYPAGE_TEXT_TOP " "
-      !define MUI_DIRECTORYPAGE_TEXT_DESTINATION "$(directory_select)"
+      !define MUI_DIRECTORYPAGE_TEXT_DESTINATION "$(directory_box)"
       !define MUI_PAGE_CUSTOMFUNCTION_PRE PatchLaunched
       !define MUI_PAGE_CUSTOMFUNCTION_LEAVE CheckDirectory
       !insertmacro MUI_PAGE_DIRECTORY
@@ -79,8 +75,10 @@ SetCompressor /SOLID lzma
       !define MUI_FINISHPAGE_NOAUTOCLOSE #DEBUG
       !insertmacro MUI_PAGE_FINISH
 
-  ; Language
-    !insertmacro MUI_LANGUAGE "English"
+; Language files
+  !insertmacro MUI_LANGUAGE "English"
+  !addincludedir .\Language
+  !include English.nsh
 
 ; Reserve files (for solid compression)
   ReserveFile inetc.dll
@@ -144,8 +142,8 @@ SectionEnd
 SectionGroupEnd
 
 Section "Music" section_music
-  ExecShell "mkdir" "$INSTDIR\tamus" SW_HIDE
-  SetOutPath "$INSTDIR\tamus"
+  CreateDirectory "$commonData\tamus"
+  SetOutPath "$commonData\tamus"
   !cd ..\data
   File /a /r "tamus\*"
   !cd ..\script
@@ -155,7 +153,7 @@ SectionEnd
 Section
   SetOutPath -
   !cd ..\data
-  #SetOutPath "$INSTDIR\tamus"
+  #SetOutPath "$commonData\tamus"
   #File /a /r "tamus\1.mp3"
   #SetOutPath -
   #File /a cdmaps.ccx
@@ -265,6 +263,12 @@ Function "CheckDirectory"
     MessageBox MB_OK|MB_ICONEXCLAMATION "$(directory_invalid)"
     Abort
   ${EndIf}
+  ${IfNot} ${FileExists} "totala1.hpi"
+    MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(directory_broken)" IDYES continue
+    Abort
+    continue:
+  ${EndIf}
+  ${IfNotThen} ${FileExists} "ccdata.ccx" ${|} MessageBox MB_OK|MB_ICONINFORMATION "$(directory_no_cc)" ${|}
   ${IfNot} ${FileExists} "totala2.hpi"
     !insertmacro SelectSection ${section_cd1}
     StrCpy $need "$(skirmish)"
