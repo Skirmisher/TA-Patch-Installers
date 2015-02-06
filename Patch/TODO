@@ -3,13 +3,14 @@ PATCH INSTALLER TODO
 -figure out what else the old patch installer does [logs have been recorded...]
   -it shoves irrelevant junk files into folders--need to investigate [see notes.txt]
 -uninstall old patch/resources first, but maybe retain settings and try to do it silently (I'll look at Windows Installer docs)
--mod migration from old system
+-mod migration from old system(?) [nah]
 -shortcuts for launcher and replayer, file registration for .tad
 -set up system to patch patch/resources
 -upgrade mode: remove directories page, replace with confirmation page?
   -maybe eventually I'll write a registry fixer/modification tool, for people that are lazy but also want to change their TA directory
 -Windows uninstall registration
 -improve directory creation/removal (for common dirs): multiple subdirs at once, remove all empty parents if install interrupted
+-rewrite version checks to be based off of Internet-checked latest version, if possible [actually no wait, if we're going to have patches...let the updater do it after install, like the old patch]
 
 COMPLETED (newest first)
 -change resources incompatibility version check to accept resources installer file like the fresh-install functionality, because the resources installer has the same check and we don't want a paradox :P

@@ -1,9 +1,8 @@
 ; Total Annihilation new unofficial patch project -- mod installer
 ; by Skirmisher
 
-; Mod: Development Mod 1.4 by Rime
-#(edit to suit your mod--edit modinfo.nsh for easy setup, or modify parts of the script to your liking; also see script/Languages/*.nsh files)#
-#(note that you will have to manually merge changes to installer script in the event of an update if you modify this file)#
+; Edit to suit your mod--edit modinfo.nsh for easy setup, or modify parts of the script to your liking; also see script\Languages\*.nsh files
+; (note that you will have to manually merge changes to installer script in the event of an update if you modify this file)
 
 ; Includes
   !addplugindir .
@@ -88,7 +87,6 @@ InstallDirRegKey HKLM "SOFTWARE\TAUniverse\TA Patch" "Path"
 ; Install sections
 
 Section
-  StrCpy $INSTDIR "$INSTDIR\${REG_NAME}"
   SetOutPath -
   !cd ..\data
   File /r ".\*"
@@ -99,6 +97,22 @@ SectionEnd
 ; Functions
 
 Function ".onInit"
+  totala:
+  nsProcess::_FindProcess "TotalA.exe"
+  Pop $2
+  ${Select} $2
+    ${Case} "0"
+      MessageBox MB_RETRYCANCEL|MB_ICONSTOP "$(totala_running)" IDRETRY totala
+      Abort
+    ${Case} "603"
+      Nop
+    ${Default}
+      MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION "$(findprocess_error)" IDOK continue
+      Abort
+      continue:
+  ${EndSelect}
+  nsProcess::_Unload
+  SetShellVarContext all
   SetRegView 32
   ReadRegStr $5 HKLM "SOFTWARE\TAUniverse\TA Patch" "Version"
   ${If} ${Errors}
@@ -113,14 +127,41 @@ Function ".onInit"
     ${If} $7 == 2 ; if version is older than KNOWN_PATCH_VER
       ${VersionCompare} $6 "${LAST_COMPAT_VER}" $7
       ${If} $7 == 2 ; if version is older than LAST_COMPAT_VER
-        MessageBox MB_YESNO|MB_ICONSTOP "$(incompat_patch)" IDNO abort
-        # dl stuff
-        abort:
+        MessageBox MB_YESNO|MB_ICONSTOP "$(incompat_patch)" IDYES dlpatch
         Abort
+        dlpatch:
+        inetc::get /BANNER "Getting version manifest..." /CONNECTTIMEOUT 5 "http://totalconcat.org/TA/UP/patch.ini" "$TEMP\TAUP_patch.ini"
+        Pop $0
+        ${If} $0 != "OK"
+          MessageBox MB_OK|MB_ICONSTOP "Download error: $0"
+          Abort
+        ${EndIf}
+        ReadINIStr $1 "$TEMP\TAUP_patch.ini" resources $5
+        ${If} ${Errors}
+          ClearErrors
+          ReadINIStr $1 "$TEMP\TAUP_patch.ini" resources full
+        ${EndIf}
+        Delete "$TEMP\TAUP_patch.ini"
+        nsDialogs::SelectFileDialog save "$EXEDIR\TA_Patch_${KNOWN_PATCH_VER}.exe" "Executable file (*.exe)|*.exe"
+        Pop $R4
+        ${If} $R4 == ""
+          Abort
+        ${EndIf}
+        inetc::get /RESUME "$(resume)" \
+          /POPUP "" /TRANSLATE "$(url)" "$(downloading)" "$(connecting)" "$(file_name)" "$(received)" "$(file_size)" "$(remaining_time)" "$(total_time)" \
+          "http://totalconcat.org/TA/UP/patch/$1" "$R4"
+        Pop $0
+        ${Switch} $0
+          ${Case} "OK"
+            ${Break}
+          ${Default}
+            MessageBox MB_OK|MB_ICONSTOP "$(dl_error)"
+          ${Case} "Cancelled"
+            Abort
+        ${EndSwitch}
       ${Else}
-        MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(old_patch)" IDNO skip
-        # dl stuff
-        skip:
+        MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(old_patch)" IDYES dlpatch
       ${EndIf}
+    ${EndIf}
   ${EndIf}
 FunctionEnd

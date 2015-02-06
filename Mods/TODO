@@ -5,6 +5,7 @@ MODS INSTALLER TODO
 -detect old patch, suggest to update
 -set up system to patch patch/resources
 -Windows uninstall registration
+-write all-in-one installer
 
 COMPLETED (newest first)
 -place defines in separate header file, for modders to edit separately from script

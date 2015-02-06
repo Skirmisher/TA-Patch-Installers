@@ -12,16 +12,12 @@
   !define VERSION 4.0.0
   !define KNOWN_RES_VER 2.0 ; current resources version as of compile time, suggests to update if user has older version
   !define LAST_COMPAT_VER 2.0 ; will require resources update if resources are older than this
+  !define CODE_WORD "boomerang" ; shh!!!
   VIProductVersion "4.0.0.0"
   VIAddVersionKey "FileVersion" "4.0.0.0"
   VIAddVersionKey "ProductName" "Total Annihilation Unofficial Patch"
   VIAddVersionKey "ProductVersion" "4.0.0.0"
   VIAddVersionKey "OriginalFilename" "TA_Patch_${VERSION}.exe"
-
-; Language files
-  !insertmacro MUI_LANGUAGE "English"
-  !addincludedir .\Language
-  !include English.nsh
 
 ; Variables
   
@@ -99,10 +95,11 @@ InstallDirRegKey HKLM "SOFTWARE\TAUniverse\TA Patch" "Path"
 
 Section /o "Resources" section_resources
   DetailPrint "Installing TA Patch Resources..."
-  ExecWait '"$R4" frisbee /MAPS="$commonMaps" /DATA="$commonData" /D=$INSTDIR'
   ClearErrors
+  ExecWait '"$R4" frisbee /MAPS="$commonMaps" /DATA="$commonData" /D=$INSTDIR'
   ReadRegStr $6 HKLM "SOFTWARE\TAUniverse\TA Patch Resources" "Version"
   ${If} ${Errors}
+    ${OrIf} $R5 != $6
     MessageBox MB_OK|MB_ICONSTOP "$(res_install_fail)"
     ; I couldn't come up with a good way to delete all empty directories *and* keep pre-existing empty directories so
     ; (or maybe I should just delete all empty directories anyway)
@@ -151,7 +148,7 @@ Function ".onInit"
   Pop $2
   ${Select} $2
     ${Case} "0"
-      MessageBox MB_RETRYCANCEL|MB_ICONSTOP "($totala_running)" IDRETRY totala
+      MessageBox MB_RETRYCANCEL|MB_ICONSTOP "$(totala_running)" IDRETRY totala
       Abort
     ${Case} "603"
       Nop
@@ -169,27 +166,19 @@ Function ".onInit"
     ${OrIf} $9 == "1.0"
     ClearErrors
     StrCpy $9 "full"
-    #MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(rescheck_fail)" IDNO abort
-    #ExecShell "open" "http://tauniverse.com/"
-    #abort:
-    #Abort
     MessageBox MB_YESNOCANCEL|MB_ICONINFORMATION "$(rescheck_fail)" IDYES open IDNO dlres
     Abort
     dlres:
     inetc::get /BANNER "Getting version manifest..." /CONNECTTIMEOUT 5 "http://totalconcat.org/TA/UP/resources.ini" "$TEMP\TAUP_resources.ini"
     Pop $0
     ${If} $0 != "OK"
-      MessageBox MB_OK|MB_ICONSTOP "Download error: $0"
+      MessageBox MB_OK|MB_ICONSTOP "$(dl_error)"
       Abort
     ${EndIf}
-    ${If} $9 == "full"
+    ReadINIStr $1 "$TEMP\TAUP_resources.ini" resources $9
+    ${If} ${Errors}
+      ClearErrors
       ReadINIStr $1 "$TEMP\TAUP_resources.ini" resources full
-    ${Else}
-      ReadINIStr $1 "$TEMP\TAUP_resources.ini" resources $9
-      ${If} ${Errors}
-        ClearErrors
-        ReadINIStr $1 "$TEMP\TAUP_resources.ini" resources full
-      ${EndIf}
     ${EndIf}
     Delete "$TEMP\TAUP_resources.ini"
     nsDialogs::SelectFileDialog save "$EXEDIR\TA_Patch_Resources_${KNOWN_RES_VER}.exe" "Executable file (*.exe)|*.exe"
@@ -197,7 +186,8 @@ Function ".onInit"
     ${If} $R4 == ""
       Abort
     ${EndIf}
-    inetc::get /POPUP "" /TRANSLATE "$(url)" "$(downloading)" "$(connecting)" "$(file_name)" "$(received)" "$(file_size)" "$(remaining_time)" "$(total_time)" \
+    inetc::get /RESUME "$(resume)" \
+      /POPUP "" /TRANSLATE "$(url)" "$(downloading)" "$(connecting)" "$(file_name)" "$(received)" "$(file_size)" "$(remaining_time)" "$(total_time)" \
       "http://totalconcat.org/TA/UP/resources/$1" "$R4"
     Pop $0
     ${Switch} $0
@@ -216,6 +206,13 @@ Function ".onInit"
       Abort
     ${EndIf}
     done:
+    ${GetFileVersion} "$R4" $R5
+    ${VersionCompare} $R5 ${KNOWN_RES_VER} $0
+    ${If} $0 == 2 ; if file version is older than KNOWN_RES_VER
+      MessageBox MB_YESNOCANCEL|MB_ICONEXCLAMATION "$(res_installer_ver)" IDYES okay IDNO dlres
+      Abort
+      okay:
+    ${EndIf}
     !insertmacro SelectSection ${section_resources}
   ${Else}
     ReadRegStr $commonMaps HKLM "SOFTWARE\TAUniverse\TA Patch" "CommonMapsPath"

@@ -13,6 +13,7 @@
   !define VERSION 2.0
   !define KNOWN_PATCH_VER 4.0.0 ; current patch as of compile time, suggests to update if user has older version
   !define LAST_COMPAT_VER 4.0.0 ; will not install if patch is older than this
+  !define CODE_WORD "frisbee" ; shh!!!
   VIProductVersion "2.0.0.0"
   VIAddVersionKey "FileVersion" "2.0"
   VIAddVersionKey "ProductName" "Total Annihilation Unofficial Patch Resources"
@@ -147,15 +148,13 @@ Section "Music" section_music
   !cd ..\data
   File /a /r "tamus\*"
   !cd ..\script
-  SetOutPath -
 SectionEnd
 
 Section
-  SetOutPath -
   !cd ..\data
   #SetOutPath "$commonData\tamus"
   #File /a /r "tamus\1.mp3"
-  #SetOutPath -
+  #SetOutPath "$commonData"
   #File /a cdmaps.ccx
   #File /a TA_AIs_2013.ccx
   #File /a TA_Features_2013.ccx
@@ -181,15 +180,30 @@ SectionEnd
 ; Functions
 
 Function ".onInit"
+  totala:
+  nsProcess::_FindProcess "TotalA.exe"
+  Pop $2
+  ${Select} $2
+    ${Case} "0"
+      MessageBox MB_RETRYCANCEL|MB_ICONSTOP "$(totala_running)" IDRETRY totala
+      Abort
+    ${Case} "603"
+      Nop
+    ${Default}
+      MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION "$(findprocess_error)" IDOK continue
+      Abort
+      continue:
+  ${EndSelect}
+  nsProcess::_Unload
   SetRegView 32 ; this probably isn't necessary
   ${GetParameters} $R6
-  ${GetOptions} '$R6' "frisbee" $5
+  ${GetOptions} '$R6' "${CODE_WORD}" $5
   ${IfNot} ${Errors}
-    StrCpy $R5 "frisbee"
+    StrCpy $R5 "${CODE_WORD}"
     ${GetOptions} '$R6' "/MAPS=" $commonMaps
     ${GetOptions} '$R6' "/DATA=" $commonData
     ${If} ${Errors}
-      MessageBox MB_OK|MB_ICONSTOP "One or more required parameters not found. Don't look at me, you know what you did. Go consult the source."
+      MessageBox MB_OK|MB_ICONSTOP "$(auto_fail)"
       ; explode
       Abort
     ${EndIf}
@@ -201,25 +215,49 @@ Function ".onInit"
     ${OrIf} $5 == "3.9.01"
     ${OrIf} $5 == "3.9.02"
     ClearErrors
-    MessageBox MB_YESNO|MB_ICONINFORMATION "$(patchcheck_fail)" IDNO abort
-    # dl stuff
-    abort:
+    StrCpy $5 "full"
+    MessageBox MB_YESNO|MB_ICONINFORMATION "$(patchcheck_fail)" IDYES dlpatch
     Abort
+    dlpatch:
+    inetc::get /BANNER "Getting version manifest..." /CONNECTTIMEOUT 5 "http://totalconcat.org/TA/UP/patch.ini" "$TEMP\TAUP_patch.ini"
+    Pop $0
+    ${If} $0 != "OK"
+      MessageBox MB_OK|MB_ICONSTOP "Download error: $0"
+      Abort
+    ${EndIf}
+    ReadINIStr $1 "$TEMP\TAUP_patch.ini" resources $5
+    ${If} ${Errors}
+      ClearErrors
+      ReadINIStr $1 "$TEMP\TAUP_patch.ini" resources full
+    ${EndIf}
+    Delete "$TEMP\TAUP_patch.ini"
+    nsDialogs::SelectFileDialog save "$EXEDIR\TA_Patch_${KNOWN_PATCH_VER}.exe" "Executable file (*.exe)|*.exe"
+    Pop $R4
+    ${If} $R4 == ""
+      Abort
+    ${EndIf}
+    inetc::get /RESUME "$(resume)" \
+      /POPUP "" /TRANSLATE "$(url)" "$(downloading)" "$(connecting)" "$(file_name)" "$(received)" "$(file_size)" "$(remaining_time)" "$(total_time)" \
+      "http://totalconcat.org/TA/UP/patch/$1" "$R4"
+    Pop $0
+    ${Switch} $0
+      ${Case} "OK"
+        ${Break}
+      ${Default}
+        MessageBox MB_OK|MB_ICONSTOP "$(dl_error)"
+      ${Case} "Cancelled"
+        Abort
+    ${EndSwitch}
   ${Else}
     ${VersionConvert} $5 "" $7 ; future-proof if someone decides to tack letters on (this function converts letters to number system)
     ${VersionCompare} $7 "${KNOWN_PATCH_VER}" $6
     ${If} $6 == 2 ; if version is older than KNOWN_PATCH_VER
       ${VersionCompare} $7 "${LAST_COMPAT_VER}" $6
       ${If} $6 == 2 ; if version is older than LAST_COMPAT_VER
-        MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(patchcheck_incompat)" IDNO abort2
-        # dl stuff
-        abort2:
+        MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(patchcheck_incompat)" IDYES dlpatch
         Abort
       ${Else}
-        MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(patchcheck_old)" IDNO skip
-        # dl stuff
-        Abort
-        skip:
+        MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(patchcheck_old)" IDYES dlpatch
       ${EndIf}
     ${EndIf}
   ${EndIf}
@@ -251,7 +289,7 @@ Function "PatchLaunched"
     Call CheckDirectory
     Abort
   ${EndIf}
-  ${If} $R5 == "frisbee"
+  ${If} $R5 == "${CODE_WORD}"
     StrCpy $R7 1
     Abort
   ${EndIf}
@@ -302,7 +340,7 @@ Function "CheckDirectory"
     !insertmacro UnselectSection ${section_cd1}
     !insertmacro UnselectSection ${section_cd2}
     !insertmacro UnselectSection ${section_movies}
-    ${If} $R5 == "frisbee"
+    ${If} $R5 == "${CODE_WORD}"
       Quit
     ${Else}
       Abort
