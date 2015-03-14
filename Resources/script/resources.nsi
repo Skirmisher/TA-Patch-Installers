@@ -313,19 +313,19 @@ Function "CheckDirectory"
   ${EndIf}
   ${IfNot} ${FileExists} "totala4.hpi"
     !insertmacro SelectSection ${section_cd2}
-    StrCpy $need "$(campaign)"
-    ${IfThen} ${SectionIsSelected} ${section_cd1} ${|} StrCpy $need "$(skirmish), $(campaign)" ${|}
+    StrCpy $need "$(campaigns)"
+    ${IfThen} ${SectionIsSelected} ${section_cd1} ${|} StrCpy $need "$(skirmish), $(campaigns)" ${|}
   ${EndIf}
   ${IfNot} ${FileExists} "Data\*.zrb"
     !insertmacro SelectSection ${section_movies}
     StrCpy $need "$(movies)"
     ${If} ${SectionIsSelected} ${section_cd1}
       ${AndIf} ${SectionIsSelected} ${section_cd2}
-      StrCpy $need "$(skirmish), $(campaign), $(movies)"
+      StrCpy $need "$(skirmish), $(campaigns), $(movies)"
     ${ElseIf} ${SectionIsSelected} ${section_cd1}
       StrCpy $need "$(skirmish), $(movies)"
     ${ElseIf} ${SectionIsSelected} ${section_cd2}
-      StrCpy $need "$(campaign), $(movies)"
+      StrCpy $need "$(campaigns), $(movies)"
     ${EndIf}
   ${EndIf}
   ${If} ${SectionIsSelected} ${section_cd1}

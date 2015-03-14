@@ -47,7 +47,7 @@ SetCompressor /SOLID lzma
       !define MUI_WELCOMEPAGE_TITLE "$(welcome_title)"
       !define MUI_WELCOMEPAGE_TEXT "$(welcome_text)"
       !insertmacro MUI_PAGE_WELCOME
-    ; Directories page
+    ; Directory page
       !define MUI_PAGE_HEADER_TEXT "$(directory_header)"
       !define MUI_PAGE_HEADER_SUBTEXT "$(directory_header_sub)"
       !define MUI_DIRECTORYPAGE_TEXT_TOP "$(directory_desc)"

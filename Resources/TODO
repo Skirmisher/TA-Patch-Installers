@@ -1,6 +1,6 @@
 RESOURCES INSTALLER TODO
 -write uninstall routines (never mind, cover that in patch installer instead)
--analyze behavior of old resources installer to replicate [logs are in repo root]
+-analyze behavior of old resources installer to replicate [logs have been recorded...]
 -check for music already existing in GOG copy
 -set up system to patch patch/resources
 

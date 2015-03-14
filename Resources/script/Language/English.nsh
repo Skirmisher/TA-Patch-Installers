@@ -29,7 +29,7 @@ LangString notfound_movies ${LANG_ENGLISH} "Total Annihilation disc not detected
 LangString needcd ${LANG_ENGLISH} "Your TA directory appears to be missing certain files found on the original CDs. You will be prompted to insert Discs 1 and/or 2 during the installation. Click No to skip this (not recommended)."
 LangString missing ${LANG_ENGLISH} "Missing files:"
 LangString skirmish ${LANG_ENGLISH} "skirmish maps"
-LangString campaign ${LANG_ENGLISH} "campaigns"
+LangString campaigns ${LANG_ENGLISH} "campaigns"
 LangString movies ${LANG_ENGLISH} "movies"
 LangString copying_disc1 ${LANG_ENGLISH} "Copying skirmish/multiplayer maps (totala2.hpi)..."
 LangString copying_disc2 ${LANG_ENGLISH} "Copying campaigns (totala4.hpi)..."

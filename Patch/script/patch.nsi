@@ -136,6 +136,9 @@ Section
   WriteRegStr HKLM "SOFTWARE\TAUniverse\TA Patch" "Version" "${VERSION}"
   WriteRegStr HKLM "SOFTWARE\TAUniverse\TA Patch" "CommonGameDataPath" $commonData
   WriteRegStr HKLM "SOFTWARE\TAUniverse\TA Patch" "CommonMapsPath" $commonMaps
+  WriteRegStr HKCR ".tad" "" "Total Annihilation Universe.Total Annihilation Unofficial Patch"
+  WriteRegStr HKCR "Total Annihilation Universe.Total Annihilation Unofficial Patch" "" "Total Annihilation Recorded Game"
+  #WriteRegStr HKCR "Total Annihilation Universe.Total Annihilation Unofficial Patch\shell\open\command" "" '"$INSTDIR\Replayer\SERVER.EXE" %1'
   ExecWait 'modstool.exe -add "-i:0" "-n:Backwards Compatibility" "-p:$INSTDIR\TotalA.exe"'
   ExecWait 'modstool.exe -add "-i:1" "-n:Total Annihilation" "-v:4.0.0" "-p:$INSTDIR\TotalA.exe" "-r:TA Patch"'
 SectionEnd
@@ -265,21 +268,21 @@ Function "Directories"
   
   !insertmacro MUI_HEADER_TEXT "$(directories_header)" "$(directories_header_sub)"
   
-  ${NSD_CreateLabel} 0 0 100% 40% "$(directories_desc)"
-  ${NSD_CreateLabel} 0 40% 100% 7% "$(directories_TA)"
-    ${NSD_CreateDirRequest} 0 47% 249u 10% $INSTDIR
+  ${NSD_CreateLabel} 0 0 100% 45% "$(directories_desc)"
+  ${NSD_CreateLabel} 0 45% 100% 7% "$(directories_TA)"
+    ${NSD_CreateDirRequest} 0 52% 249u 10% $INSTDIR
     Pop $Directories_instdir
-      ${NSD_CreateBrowseButton} 250u 47% 50u 10% "$(directories_browse)"
+      ${NSD_CreateBrowseButton} 250u 52% 50u 10% "$(directories_browse)"
       Pop $Directories_instdir_browse
-  ${NSD_CreateLabel} 0 60% 100% 7% "$(directories_maps)"
-    ${NSD_CreateDirRequest} 0 67% 249u 10% $commonMaps
+  ${NSD_CreateLabel} 0 63% 100% 7% "$(directories_maps)"
+    ${NSD_CreateDirRequest} 0 70% 249u 10% $commonMaps
     Pop $Directories_commonMaps
-      ${NSD_CreateBrowseButton} 250u 67% 50u 10% "$(directories_browse)"
+      ${NSD_CreateBrowseButton} 250u 70% 50u 10% "$(directories_browse)"
       Pop $Directories_commonMaps_browse
-  ${NSD_CreateLabel} 0 80% 100% 7% "$(directories_data)"
-    ${NSD_CreateDirRequest} 0 87% 249u 10% $commonData
+  ${NSD_CreateLabel} 0 81% 100% 7% "$(directories_data)"
+    ${NSD_CreateDirRequest} 0 88% 249u 10% $commonData
     Pop $Directories_commonData
-      ${NSD_CreateBrowseButton} 250u 87% 50u 10% "$(directories_browse)"
+      ${NSD_CreateBrowseButton} 250u 88% 50u 10% "$(directories_browse)"
       Pop $Directories_commonData_browse
   
   ${NSD_OnChange} $Directories_commonData Directories_commonDataChanged
